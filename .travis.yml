@@ -10,7 +10,14 @@ sudo: false
 install:
   - bash ./devscripts/install_srelay.sh
   - export PATH=$PATH:$(pwd)/tmp/srelay-0.4.8b6
-script: nosetests test --verbose
+env:
+  - TESTS=complete
+  - TESTS=regression
+matrix:
+  allow_failures:
+    - env: TESTS=complete
+
+script: devscripts/travis.sh
 notifications:
   email:
     - filippo.valsorda@gmail.com
