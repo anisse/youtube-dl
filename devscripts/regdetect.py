@@ -99,7 +99,7 @@ def main():
     if len(sys.argv) < 3:
         commit_range = os.getenv("TRAVIS_COMMIT_RANGE")
         if commit_range != None:
-            commits = commit_range.split("..")
+            commits = commit_range.split("...")
             refcommit, testcommit = commits[0] + "^", commits[1]
         else:
             testcommit="master"
