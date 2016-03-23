@@ -94,6 +94,17 @@ def git_checkout(arg):
     #results = process_stream(f)
     #f.close()
 
+def regressive_tests(refresults, testresults):
+    regressive = []
+    # Return list of tests that are ok in refsults but not in testresults
+    for k in refresults:
+        assert k in testresults, "New unknown test case"
+        if refresults[k] == "ok" and refresults[k] != testresults[k]: #let's assume FAIL == ERROR
+            regressive.append(k)
+
+    return regressive
+
+
 
 def main():
     if len(sys.argv) < 3:
@@ -112,7 +123,7 @@ def main():
 
     git_checkout(testcommit)
 
-    results = iterate_tests(sys.argv[3:]) # use remaining args to limit test selection
+    results = launch_nose(sys.argv[3:]) # use remaining args to limit test selection
 
     failed_tests = filter_bad(results)
     if len(failed_tests) == 0:
@@ -124,23 +135,35 @@ def main():
 
     git_checkout(refcommit)
 
-    results_redo = iterate_tests(failed_tests)
+    results_ref = launch_nose(failed_tests)
     print("Second run of %d tests done."%len(failed_tests))
 
-    ret = 0
-    for k in results_redo:
-        assert k in results, "New unknown test case"
-        if results_redo[k] != results[k]:
-            print("Test %s was %s in %s, is now %s at %s"%(k,results_redo[k],
-                refcommit, results[k]), testcommit)
-            ret = -1
-
-    if ret == 0:
-        print("There was no detected regression")
+    regressive = regressive_tests(results_ref, results)
 
     git_checkout(testcommit)
 
-    sys.exit(ret)
+    if len(regressive) == 0:
+        print("There was no detected regression")
+        sys.exit(0)
+
+
+    print("%d test(s) have a potential regression. Retrying them a few times to be sure"%len(regressive))
+
+    results_retry = iterate_tests(regressive)
+
+    failed_retry = filter_bad(results_retry)
+    if len(failed_retry) == 0:
+        print("All false alarms, exiting")
+        sys.exit(0)
+
+    print("We have %d regressions"%len(failed_retry))
+    for k in failed_retry:
+        print("Test %s was %s in %s, is now %s at %s"%(k, results_ref[k],
+            refcommit, results_retry[k]), testcommit)
+
+    git_checkout(testcommit)
+
+    sys.exit(-1)
 
 if __name__ == "__main__":
     main()
