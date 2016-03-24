@@ -31,6 +31,10 @@ def process(test):
         print("Unknown test status", status)
         return (None, None)
 
+    # we cannot assume that a test failing with a warning is ok (network error)
+    if status == "ok" and test.find("WARNING") != -1:
+        status = "WARNING"
+
     return (fulltestname, status)
 
 def fill_results(res, results):
