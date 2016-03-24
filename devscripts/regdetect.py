@@ -159,7 +159,7 @@ def main():
     print("We have %d regressions"%len(failed_retry))
     for k in failed_retry:
         print("Test %s was %s in %s, is now %s at %s"%(k, results_ref[k],
-            refcommit, results_retry[k]), testcommit)
+            refcommit, results_retry[k], testcommit))
 
     git_checkout(testcommit)
 
