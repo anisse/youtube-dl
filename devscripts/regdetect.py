@@ -82,7 +82,11 @@ def iterate_tests(testlist=[], iterations=16, cooldown=60):
     # keep running those tests a few times to make sure the failure wasn't
     # temporary (bad connection, site error, ...)
     for i in range(iterations):
-        results = launch_nose(failed_tests)
+        if (i + 1) == iterations :
+            # If this is is the last run and we're still here, we probably want to see more debug info
+            results = launch_nose(["--debug" ] + failed_tests)
+        else:
+            results = launch_nose(failed_tests)
         failed_tests = filter_bad(results)
         print("Run %d done. Has %d out of %d non-ok tests"%(i, len(failed_tests), len(results.keys())))
         if len(failed_tests) == 0: # no failure. Awesome !
