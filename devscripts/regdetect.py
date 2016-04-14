@@ -41,11 +41,11 @@ def fill_results(res, results):
     if res[0] != None and res[1] != None:
         results[res[0]] = res[1]
 
-def process_stream(f):
+def process_stream(f, verbose):
     results = {}
     buf = None
     for line in f:
-        print(line, end='')
+        if verbose: print(line, end='')
         if line.startswith("===========") or line.startswith("--------------"):
             #this is the end
             break
@@ -60,9 +60,9 @@ def process_stream(f):
     return results
 
 
-def launch_nose(args=[]):
+def launch_nose(args=[], verbose=True):
     nose = subprocess.Popen(["nosetests", "-v"] + args, stderr=subprocess.PIPE, universal_newlines=True)
-    results = process_stream(nose.stderr)
+    results = process_stream(nose.stderr, verbose)
     nose.stderr.close()
     nose.wait()
     return results
@@ -109,7 +109,7 @@ def regressive_tests(refresults, testresults):
     return regressive
 
 def list_nose_tests():
-    tests = sorted(launch_nose(["--collect-only"]).keys())
+    tests = sorted(launch_nose(["--collect-only"], verbose=False).keys())
     return tests
 
 def sub_tests():
