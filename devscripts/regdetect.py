@@ -108,6 +108,29 @@ def regressive_tests(refresults, testresults):
 
     return regressive
 
+def list_nose_tests():
+    tests = sorted(launch_nose(["--collect-only"]).keys())
+    return tests
+
+def sub_tests():
+    # See if we need to slice the work and do only one part
+    slice_arg = os.getenv("TESTS")
+    if slice_arg == None:
+        return None
+
+    test_slice = slice_arg.split('_')[1]
+    slice_bounds = test_slice.split('-of-')
+    current_slice = int(slice_bounds[0])
+    nr_slices = int(slice_bounds[1])
+    all_tests = list_nose_tests()
+    length = len(all_tests)
+    sub_test_list = all_tests[(current_slice-1)*length // nr_slices : \
+                              current_slice*length // nr_slices]
+
+    print("Running slice %d of %d; it has %d out of %d tests"%(current_slice,
+            nr_slices, len(sub_test_list), length))
+
+    return sub_test_list
 
 
 def main():
@@ -127,7 +150,14 @@ def main():
 
     git_checkout(testcommit)
 
-    results = launch_nose(sys.argv[3:]) # use remaining args to limit test selection
+    sub_test_list = sub_tests()
+
+    if sub_test_list != None:
+        args = sub_test_list
+    else:
+        args = sys.argv[3:] # use remaining args to limit test selection (if there are any)
+
+    results = launch_nose(args)
 
     failed_tests = filter_bad(results)
     if len(failed_tests) == 0:

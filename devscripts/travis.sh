@@ -1,7 +1,7 @@
 #!/bin/sh
 
-if [ "$TESTS" = "regression" ]; then
-	exec ./devscripts/regdetect.py
-else
+if [ "$TESTS" = "complete" ]; then
 	exec nosetests test --verbose
+else
+	exec ./devscripts/regdetect.py
 fi

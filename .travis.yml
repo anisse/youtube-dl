@@ -12,7 +12,16 @@ install:
   - export PATH=$PATH:$(pwd)/tmp/srelay-0.4.8b6
 env:
   - TESTS=complete
-  - TESTS=regression
+  - TESTS=regression_1-of-10
+  - TESTS=regression_2-of-10
+  - TESTS=regression_3-of-10
+  - TESTS=regression_4-of-10
+  - TESTS=regression_5-of-10
+  - TESTS=regression_6-of-10
+  - TESTS=regression_7-of-10
+  - TESTS=regression_8-of-10
+  - TESTS=regression_9-of-10
+  - TESTS=regression_10-of-10
 matrix:
   allow_failures:
     - env: TESTS=complete
