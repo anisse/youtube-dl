@@ -75,7 +75,7 @@ def filter_bad(results):
             redo[k] = results[k]
     return list(redo.keys())
 
-def iterate_tests(testlist=[], iterations=7):
+def iterate_tests(testlist=[], iterations=16):
     failed_tests=testlist # empty means run all tests
     # run tests passed in arguments (or all) and get list of failed tests
     # keep running those tests a few times to make sure the failure wasn't
