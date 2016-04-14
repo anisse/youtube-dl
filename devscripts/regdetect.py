@@ -5,6 +5,7 @@ from __future__ import print_function
 import subprocess
 import sys
 import os
+import time
 
 
 def process(test):
@@ -75,7 +76,7 @@ def filter_bad(results):
             redo[k] = results[k]
     return list(redo.keys())
 
-def iterate_tests(testlist=[], iterations=16):
+def iterate_tests(testlist=[], iterations=16, cooldown=60):
     failed_tests=testlist # empty means run all tests
     # run tests passed in arguments (or all) and get list of failed tests
     # keep running those tests a few times to make sure the failure wasn't
@@ -86,6 +87,7 @@ def iterate_tests(testlist=[], iterations=16):
         print("Run %d done. Has %d out of %d non-ok tests"%(i, len(failed_tests), len(results.keys())))
         if len(failed_tests) == 0: # no failure. Awesome !
             break
+        time.sleep(cooldown)
     return results # this will return a partial result list. It does not matter since ok-tests aren't that interesting
 
 def git_checkout(arg):
