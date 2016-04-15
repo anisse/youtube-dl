@@ -57,6 +57,9 @@ def process_stream(f, verbose):
         else:
             if buf and len(buf) > 0: # some tests have multi-line outputs
                 buf += line
+    if verbose: # print the end of the file
+        for line in f: # it might contain interesting info, like tracebacks
+            print(line, end='')
     fill_results(process(buf), results) # process last line
     return results
 
