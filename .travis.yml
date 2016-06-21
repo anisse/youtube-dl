@@ -26,8 +26,8 @@ matrix:
 script: devscripts/travis.sh
 notifications:
   email:
-    - filippo.valsorda@gmail.com
-    - yasoob.khld@gmail.com
+  # TODO: change before merge to put back project members !
+    - anisse@astier.eu
 #  irc:
 #    channels:
 #      - "irc.freenode.org#youtube-dl"
