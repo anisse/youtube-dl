@@ -425,6 +425,7 @@ from .makerschannel import MakersChannelIE
 from .makertv import MakerTVIE
 from .matchtv import MatchTVIE
 from .mdr import MDRIE
+from .meta import METAIE
 from .metacafe import MetacafeIE
 from .metacritic import MetacriticIE
 from .mgoon import MgoonIE
@@ -713,6 +714,7 @@ from .skynewsarabia import (
     SkyNewsArabiaIE,
     SkyNewsArabiaArticleIE,
 )
+from .skysports import SkySportsIE
 from .slideshare import SlideshareIE
 from .slutload import SlutloadIE
 from .smotri import (
@@ -797,6 +799,7 @@ from .teletask import TeleTaskIE
 from .telewebion import TelewebionIE
 from .testurl import TestURLIE
 from .tf1 import TF1IE
+from .theatlantic import TheAtlanticIE
 from .theintercept import TheInterceptIE
 from .theplatform import (
     ThePlatformIE,
