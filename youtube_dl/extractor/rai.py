@@ -15,8 +15,100 @@ from ..utils import (
 )
 
 
-class RaiTVIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:.+?\.)?(?:rai\.it|rai\.tv|rainews\.it)/dl/(?:[^/]+/)+media/.+?-(?P<id>[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12})(?:-.+?)?\.html'
+class RaiBaseIE(InfoExtractor):
+    def _extract_relinker_formats(self, relinker_url, video_id):
+        formats = []
+
+        for platform in ('mon', 'flash', 'native'):
+            relinker = self._download_xml(
+                relinker_url, video_id,
+                note='Downloading XML metadata for platform %s' % platform,
+                transform_source=fix_xml_ampersands,
+                query={'output': 45, 'pl': platform},
+                headers=self.geo_verification_headers())
+
+            media_url = find_xpath_attr(relinker, './url', 'type', 'content').text
+            if media_url == 'http://download.rai.it/video_no_available.mp4':
+                self.raise_geo_restricted()
+
+            ext = determine_ext(media_url)
+            if (ext == 'm3u8' and platform != 'mon') or (ext == 'f4m' and platform != 'flash'):
+                continue
+
+            if ext == 'm3u8':
+                formats.extend(self._extract_m3u8_formats(
+                    media_url, video_id, 'mp4', 'm3u8_native',
+                    m3u8_id='hls', fatal=False))
+            elif ext == 'f4m':
+                manifest_url = update_url_query(
+                    media_url.replace('manifest#live_hds.f4m', 'manifest.f4m'),
+                    {'hdcore': '3.7.0', 'plugin': 'aasp-3.7.0.39.44'})
+                formats.extend(self._extract_f4m_formats(
+                    manifest_url, video_id, f4m_id='hds', fatal=False))
+            else:
+                bitrate = int_or_none(xpath_text(relinker, 'bitrate'))
+                formats.append({
+                    'url': media_url,
+                    'tbr': bitrate if bitrate > 0 else None,
+                    'format_id': 'http-%d' % bitrate if bitrate > 0 else 'http',
+                })
+
+        return formats
+
+    def _extract_from_content_id(self, content_id, base_url):
+        media = self._download_json(
+            'http://www.rai.tv/dl/RaiTV/programmi/media/ContentItem-%s.html?json' % content_id,
+            content_id, 'Downloading video JSON')
+
+        thumbnails = []
+        for image_type in ('image', 'image_medium', 'image_300'):
+            thumbnail_url = media.get(image_type)
+            if thumbnail_url:
+                thumbnails.append({
+                    'url': compat_urlparse.urljoin(base_url, thumbnail_url),
+                })
+
+        formats = []
+        media_type = media['type']
+        if 'Audio' in media_type:
+            formats.append({
+                'format_id': media.get('formatoAudio'),
+                'url': media['audioUrl'],
+                'ext': media.get('formatoAudio'),
+            })
+        elif 'Video' in media_type:
+            formats.extend(self._extract_relinker_formats(media['mediaUri'], content_id))
+            self._sort_formats(formats)
+        else:
+            raise ExtractorError('not a media file')
+
+        subtitles = {}
+        captions = media.get('subtitlesUrl')
+        if captions:
+            STL_EXT = '.stl'
+            SRT_EXT = '.srt'
+            if captions.endswith(STL_EXT):
+                captions = captions[:-len(STL_EXT)] + SRT_EXT
+            subtitles['it'] = [{
+                'ext': 'srt',
+                'url': captions,
+            }]
+
+        return {
+            'id': content_id,
+            'title': media['name'],
+            'description': media.get('desc'),
+            'thumbnails': thumbnails,
+            'uploader': media.get('author'),
+            'upload_date': unified_strdate(media.get('date')),
+            'duration': parse_duration(media.get('length')),
+            'formats': formats,
+            'subtitles': subtitles,
+        }
+
+
+class RaiTVIE(RaiBaseIE):
+    _VALID_URL = r'https?://(?:.+?\.)?(?:rai\.it|rai\.tv|rainews\.it)/dl/(?:[^/]+/)+(?:media|ondemand)/.+?-(?P<id>[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12})(?:-.+?)?\.html'
     _TESTS = [
         {
             'url': 'http://www.rai.tv/dl/RaiTV/programmi/media/ContentItem-cb27157f-9dd0-4aee-b788-b1f67643a391.html',
@@ -85,95 +177,10 @@ class RaiTVIE(InfoExtractor):
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
-        media = self._download_json(
-            'http://www.rai.tv/dl/RaiTV/programmi/media/ContentItem-%s.html?json' % video_id,
-            video_id, 'Downloading video JSON')
-
-        thumbnails = []
-        for image_type in ('image', 'image_medium', 'image_300'):
-            thumbnail_url = media.get(image_type)
-            if thumbnail_url:
-                thumbnails.append({
-                    'url': compat_urlparse.urljoin(url, thumbnail_url),
-                })
-
-        formats = []
-        media_type = media['type']
-        if 'Audio' in media_type:
-            formats.append({
-                'format_id': media.get('formatoAudio'),
-                'url': media['audioUrl'],
-                'ext': media.get('formatoAudio'),
-            })
-        elif 'Video' in media_type:
-            for platform in ('mon', 'flash', 'native'):
-                headers = {}
-                # TODO: rename --cn-verification-proxy
-                cn_verification_proxy = self._downloader.params.get('cn_verification_proxy')
-                if cn_verification_proxy:
-                    headers['Ytdl-request-proxy'] = cn_verification_proxy
-
-                relinker = self._download_xml(
-                    media['mediaUri'], video_id,
-                    note='Downloading XML metadata for platform %s' % platform,
-                    transform_source=fix_xml_ampersands,
-                    query={'output': 45, 'pl': platform}, headers=headers)
-
-                media_url = find_xpath_attr(relinker, './url', 'type', 'content').text
-                if media_url == 'http://download.rai.it/video_no_available.mp4':
-                    self.raise_geo_restricted()
-
-                ext = determine_ext(media_url)
-                if (platform == 'mon' and ext != 'm3u8') or (platform == 'flash' and ext != 'f4m'):
-                    continue
-
-                if ext == 'm3u8':
-                    formats.extend(self._extract_m3u8_formats(
-                        media_url, video_id, 'mp4', 'm3u8_native',
-                        m3u8_id='hls', fatal=False))
-                elif ext == 'f4m':
-                    manifest_url = update_url_query(
-                        media_url, {'hdcore': '3.7.0', 'plugin': 'aasp-3.7.0.39.44'})
-                    formats.extend(self._extract_f4m_formats(
-                        manifest_url, video_id, f4m_id='hds', fatal=False))
-                else:
-                    bitrate = int_or_none(xpath_text(relinker, 'bitrate'))
-                    formats.append({
-                        'url': media_url,
-                        'tbr': bitrate if bitrate > 0 else None,
-                        'format_id': 'http-%d' % bitrate if bitrate > 0 else 'http',
-                    })
-
-            self._sort_formats(formats)
-        else:
-            raise ExtractorError('not a media file')
-
-        subtitles = {}
-        captions = media.get('subtitlesUrl')
-        if captions:
-            STL_EXT = '.stl'
-            SRT_EXT = '.srt'
-            if captions.endswith(STL_EXT):
-                captions = captions[:-len(STL_EXT)] + SRT_EXT
-            subtitles['it'] = [{
-                'ext': 'srt',
-                'url': captions,
-            }]
-
-        return {
-            'id': video_id,
-            'title': media['name'],
-            'description': media.get('desc'),
-            'thumbnails': thumbnails,
-            'uploader': media.get('author'),
-            'upload_date': unified_strdate(media.get('date')),
-            'duration': parse_duration(media.get('length')),
-            'formats': formats,
-            'subtitles': subtitles,
-        }
+        return self._extract_from_content_id(video_id, url)
 
 
-class RaiIE(InfoExtractor):
+class RaiIE(RaiBaseIE):
     _VALID_URL = r'https?://(?:.+?\.)?(?:rai\.it|rai\.tv|rainews\.it)/dl/.+?-(?P<id>[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12})(?:-.+?)?\.html'
     _TESTS = [
         {
@@ -186,7 +193,38 @@ class RaiIE(InfoExtractor):
                 'description': 'md5:4b1afae1364115ce5d78ed83cd2e5b3a',
                 'upload_date': '20141221',
             },
-        }
+        },
+        {
+            # Direct relinker URL
+            'url': 'http://www.rai.tv/dl/RaiTV/dirette/PublishingBlock-1912dbbf-3f96-44c3-b4cf-523681fbacbc.html?channel=EuroNews',
+            # HDS live stream, MD5 is unstable
+            'info_dict': {
+                'id': '1912dbbf-3f96-44c3-b4cf-523681fbacbc',
+                'ext': 'flv',
+                'title': 'EuroNews',
+            },
+            'skip': 'Geo-restricted to Italy',
+        },
+        {
+            # Embedded content item ID
+            'url': 'http://www.tg1.rai.it/dl/tg1/2010/edizioni/ContentSet-9b6e0cba-4bef-4aef-8cf0-9f7f665b7dfb-tg1.html?item=undefined',
+            'md5': '84c1135ce960e8822ae63cec34441d63',
+            'info_dict': {
+                'id': '0960e765-62c8-474a-ac4b-7eb3e2be39c8',
+                'ext': 'mp4',
+                'title': 'TG1 ore 20:00 del 02/07/2016',
+                'upload_date': '20160702',
+            },
+        },
+        {
+            'url': 'http://www.rainews.it/dl/rainews/live/ContentItem-3156f2f2-dc70-4953-8e2f-70d7489d4ce9.html',
+            # HDS live stream, MD5 is unstable
+            'info_dict': {
+                'id': '3156f2f2-dc70-4953-8e2f-70d7489d4ce9',
+                'ext': 'flv',
+                'title': 'La diretta di Rainews24',
+            },
+        },
     ]
 
     @classmethod
@@ -200,7 +238,30 @@ class RaiIE(InfoExtractor):
         iframe_url = self._search_regex(
             [r'<iframe[^>]+src="([^"]*/dl/[^"]+\?iframe\b[^"]*)"',
              r'drawMediaRaiTV\(["\'](.+?)["\']'],
-            webpage, 'iframe')
-        if not iframe_url.startswith('http'):
-            iframe_url = compat_urlparse.urljoin(url, iframe_url)
-        return self.url_result(iframe_url)
+            webpage, 'iframe', default=None)
+        if iframe_url:
+            if not iframe_url.startswith('http'):
+                iframe_url = compat_urlparse.urljoin(url, iframe_url)
+            return self.url_result(iframe_url)
+
+        content_item_id = self._search_regex(
+            r'initEdizione\((?P<q1>[\'"])ContentItem-(?P<content_id>[^\'"]+)(?P=q1)',
+            webpage, 'content item ID', group='content_id', default=None)
+        if content_item_id:
+            return self._extract_from_content_id(content_item_id, url)
+
+        relinker_url = compat_urlparse.urljoin(url, self._search_regex(
+            r'(?:var\s+videoURL|mediaInfo\.mediaUri)\s*=\s*(?P<q1>[\'"])(?P<url>(https?:)?//mediapolis\.rai\.it/relinker/relinkerServlet\.htm\?cont=\d+)(?P=q1)',
+            webpage, 'relinker URL', group='url'))
+        formats = self._extract_relinker_formats(relinker_url, video_id)
+        self._sort_formats(formats)
+
+        title = self._search_regex(
+            r'var\s+videoTitolo\s*=\s*([\'"])(?P<title>[^\'"]+)\1',
+            webpage, 'title', group='title', default=None) or self._og_search_title(webpage)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'formats': formats,
+        }
