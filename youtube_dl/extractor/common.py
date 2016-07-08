@@ -44,6 +44,7 @@ from ..utils import (
     sanitized_Request,
     unescapeHTML,
     unified_strdate,
+    unified_timestamp,
     url_basename,
     xpath_element,
     xpath_text,
@@ -161,6 +162,7 @@ class InfoExtractor(object):
                         * "height" (optional, int)
                         * "resolution" (optional, string "{width}x{height"},
                                         deprecated)
+                        * "filesize" (optional, int)
     thumbnail:      Full URL to a video thumbnail image.
     description:    Full video description.
     uploader:       Full name of the video uploader.
@@ -803,15 +805,17 @@ class InfoExtractor(object):
         return self._html_search_meta('twitter:player', html,
                                       'twitter card player')
 
-    def _search_json_ld(self, html, video_id, **kwargs):
+    def _search_json_ld(self, html, video_id, expected_type=None, **kwargs):
         json_ld = self._search_regex(
             r'(?s)<script[^>]+type=(["\'])application/ld\+json\1[^>]*>(?P<json_ld>.+?)</script>',
             html, 'JSON-LD', group='json_ld', **kwargs)
         if not json_ld:
             return {}
-        return self._json_ld(json_ld, video_id, fatal=kwargs.get('fatal', True))
+        return self._json_ld(
+            json_ld, video_id, fatal=kwargs.get('fatal', True),
+            expected_type=expected_type)
 
-    def _json_ld(self, json_ld, video_id, fatal=True):
+    def _json_ld(self, json_ld, video_id, fatal=True, expected_type=None):
         if isinstance(json_ld, compat_str):
             json_ld = self._parse_json(json_ld, video_id, fatal=fatal)
         if not json_ld:
@@ -819,6 +823,8 @@ class InfoExtractor(object):
         info = {}
         if json_ld.get('@context') == 'http://schema.org':
             item_type = json_ld.get('@type')
+            if expected_type is not None and expected_type != item_type:
+                return info
             if item_type == 'TVEpisode':
                 info.update({
                     'episode': unescapeHTML(json_ld.get('name')),
@@ -836,6 +842,19 @@ class InfoExtractor(object):
                     'timestamp': parse_iso8601(json_ld.get('datePublished')),
                     'title': unescapeHTML(json_ld.get('headline')),
                     'description': unescapeHTML(json_ld.get('articleBody')),
+                })
+            elif item_type == 'VideoObject':
+                info.update({
+                    'url': json_ld.get('contentUrl'),
+                    'title': unescapeHTML(json_ld.get('name')),
+                    'description': unescapeHTML(json_ld.get('description')),
+                    'thumbnail': json_ld.get('thumbnailUrl'),
+                    'duration': parse_duration(json_ld.get('duration')),
+                    'timestamp': unified_timestamp(json_ld.get('uploadDate')),
+                    'filesize': float_or_none(json_ld.get('contentSize')),
+                    'tbr': int_or_none(json_ld.get('bitrate')),
+                    'width': int_or_none(json_ld.get('width')),
+                    'height': int_or_none(json_ld.get('height')),
                 })
         return dict((k, v) for k, v in info.items() if v is not None)
 
