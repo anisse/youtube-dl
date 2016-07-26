@@ -91,7 +91,7 @@ class MTVServicesInfoExtractor(InfoExtractor):
                 formats.extend([{
                     'ext': 'flv' if new_url.startswith('rtmp') else ext,
                     'url': new_url,
-                    'format_id': '-'.join([kind, rendition.get('bitrate')]),
+                    'format_id': '-'.join(filter(None, [kind, rendition.get('bitrate')])),
                     'width': int(rendition.get('width')),
                     'height': int(rendition.get('height')),
                 } for kind, new_url in new_urls.items()])
@@ -329,6 +329,7 @@ class MTVDEIE(MTVServicesInfoExtractor):
             # rtmp download
             'skip_download': True,
         },
+        'skip': 'Blocked at Travis CI',
     }, {
         # mediagen URL without query (e.g. http://videos.mtvnn.com/mediagen/e865da714c166d18d6f80893195fcb97)
         'url': 'http://www.mtv.de/shows/933-teen-mom-2/staffeln/5353/folgen/63565-enthullungen',
@@ -341,6 +342,7 @@ class MTVDEIE(MTVServicesInfoExtractor):
             # rtmp download
             'skip_download': True,
         },
+        'skip': 'Blocked at Travis CI',
     }, {
         'url': 'http://www.mtv.de/news/77491-mtv-movies-spotlight-pixels-teil-3',
         'info_dict': {
