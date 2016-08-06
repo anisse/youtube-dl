@@ -846,7 +846,7 @@ class InfoExtractor(object):
                     part_of_season = e.get('partOfSeason')
                     if isinstance(part_of_season, dict) and part_of_season.get('@type') == 'TVSeason':
                         info['season_number'] = int_or_none(part_of_season.get('seasonNumber'))
-                    part_of_series = e.get('partOfSeries')
+                    part_of_series = e.get('partOfSeries') or e.get('partOfTVSeries')
                     if isinstance(part_of_series, dict) and part_of_series.get('@type') == 'TVSeries':
                         info['series'] = unescapeHTML(part_of_series.get('name'))
                 elif item_type == 'Article':
@@ -1140,7 +1140,7 @@ class InfoExtractor(object):
             'url': m3u8_url,
             'ext': ext,
             'protocol': 'm3u8',
-            'preference': preference - 1 if preference else -1,
+            'preference': -100,
             'resolution': 'multiple',
             'format_note': 'Quality selection URL',
         }
