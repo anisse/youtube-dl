@@ -272,10 +272,7 @@ from .fox import FOXIE
 from .foxgay import FoxgayIE
 from .foxnews import FoxNewsIE
 from .foxsports import FoxSportsIE
-from .franceculture import (
-    FranceCultureIE,
-    FranceCultureEmissionIE,
-)
+from .franceculture import FranceCultureIE
 from .franceinter import FranceInterIE
 from .francetv import (
     PluzzIE,
@@ -812,7 +809,6 @@ from .tagesschau import (
     TagesschauPlayerIE,
     TagesschauIE,
 )
-from .tapely import TapelyIE
 from .tass import TassIE
 from .tdslifeway import TDSLifewayIE
 from .teachertube import (
@@ -930,6 +926,10 @@ from .udn import UDNEmbedIE
 from .digiteka import DigitekaIE
 from .unistra import UnistraIE
 from .uol import UOLIE
+from .uplynk import (
+    UplynkIE,
+    UplynkPreplayIE,
+)
 from .urort import UrortIE
 from .urplay import URPlayIE
 from .usatoday import USATodayIE
