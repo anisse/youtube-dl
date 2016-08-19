@@ -1504,46 +1504,63 @@ def parse_filesize(s):
     _UNIT_TABLE = {
         'B': 1,
         'b': 1,
+        'bytes': 1,
         'KiB': 1024,
         'KB': 1000,
         'kB': 1024,
         'Kb': 1000,
         'kb': 1000,
+        'kilobytes': 1000,
+        'kibibytes': 1024,
         'MiB': 1024 ** 2,
         'MB': 1000 ** 2,
         'mB': 1024 ** 2,
         'Mb': 1000 ** 2,
         'mb': 1000 ** 2,
+        'megabytes': 1000 ** 2,
+        'mebibytes': 1024 ** 2,
         'GiB': 1024 ** 3,
         'GB': 1000 ** 3,
         'gB': 1024 ** 3,
         'Gb': 1000 ** 3,
         'gb': 1000 ** 3,
+        'gigabytes': 1000 ** 3,
+        'gibibytes': 1024 ** 3,
         'TiB': 1024 ** 4,
         'TB': 1000 ** 4,
         'tB': 1024 ** 4,
         'Tb': 1000 ** 4,
         'tb': 1000 ** 4,
+        'terabytes': 1000 ** 4,
+        'tebibytes': 1024 ** 4,
         'PiB': 1024 ** 5,
         'PB': 1000 ** 5,
         'pB': 1024 ** 5,
         'Pb': 1000 ** 5,
         'pb': 1000 ** 5,
+        'petabytes': 1000 ** 5,
+        'pebibytes': 1024 ** 5,
         'EiB': 1024 ** 6,
         'EB': 1000 ** 6,
         'eB': 1024 ** 6,
         'Eb': 1000 ** 6,
         'eb': 1000 ** 6,
+        'exabytes': 1000 ** 6,
+        'exbibytes': 1024 ** 6,
         'ZiB': 1024 ** 7,
         'ZB': 1000 ** 7,
         'zB': 1024 ** 7,
         'Zb': 1000 ** 7,
         'zb': 1000 ** 7,
+        'zettabytes': 1000 ** 7,
+        'zebibytes': 1024 ** 7,
         'YiB': 1024 ** 8,
         'YB': 1000 ** 8,
         'yB': 1024 ** 8,
         'Yb': 1000 ** 8,
         'yb': 1000 ** 8,
+        'yottabytes': 1000 ** 8,
+        'yobibytes': 1024 ** 8,
     }
 
     return lookup_unit_table(_UNIT_TABLE, s)
@@ -2038,14 +2055,14 @@ def js_to_json(code):
             }.get(m.group(0), m.group(0)), v[1:-1])
 
         INTEGER_TABLE = (
-            (r'^0[xX][0-9a-fA-F]+', 16),
-            (r'^0+[0-7]+', 8),
+            (r'^(0[xX][0-9a-fA-F]+)\s*:?$', 16),
+            (r'^(0+[0-7]+)\s*:?$', 8),
         )
 
         for regex, base in INTEGER_TABLE:
             im = re.match(regex, v)
             if im:
-                i = int(im.group(0), base)
+                i = int(im.group(1), base)
                 return '"%d":' % i if v.endswith(':') else '%d' % i
 
         return '"%s"' % v

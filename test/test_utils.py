@@ -712,6 +712,9 @@ class TestUtil(unittest.TestCase):
         inp = '''{"foo":101}'''
         self.assertEqual(js_to_json(inp), '''{"foo":101}''')
 
+        inp = '''{"duration": "00:01:07"}'''
+        self.assertEqual(js_to_json(inp), '''{"duration": "00:01:07"}''')
+
     def test_js_to_json_edgecases(self):
         on = js_to_json("{abc_def:'1\\'\\\\2\\\\\\'3\"4'}")
         self.assertEqual(json.loads(on), {"abc_def": "1'\\2\\'3\"4"})
@@ -820,6 +823,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_filesize('1.2tb'), 1200000000000)
         self.assertEqual(parse_filesize('1,24 KB'), 1240)
         self.assertEqual(parse_filesize('1,24 kb'), 1240)
+        self.assertEqual(parse_filesize('8.5 megabytes'), 8500000)
 
     def test_parse_count(self):
         self.assertEqual(parse_count(None), None)
