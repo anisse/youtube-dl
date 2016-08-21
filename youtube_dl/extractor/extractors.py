@@ -134,6 +134,7 @@ from .ccc import CCCIE
 from .cda import CDAIE
 from .ceskatelevize import CeskaTelevizeIE
 from .channel9 import Channel9IE
+from .charlierose import CharlieRoseIE
 from .chaturbate import ChaturbateIE
 from .chilloutzone import ChilloutzoneIE
 from .chirbit import (
@@ -1114,7 +1115,4 @@ from .youtube import (
 )
 from .zapiks import ZapiksIE
 from .zdf import ZDFIE, ZDFChannelIE
-from .zingmp3 import (
-    ZingMp3SongIE,
-    ZingMp3AlbumIE,
-)
+from .zingmp3 import ZingMp3IE
