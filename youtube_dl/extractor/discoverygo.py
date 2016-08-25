@@ -7,6 +7,7 @@ from ..utils import (
     int_or_none,
     parse_age_limit,
     unescapeHTML,
+    ExtractorError,
 )
 
 
@@ -53,7 +54,14 @@ class DiscoveryGoIE(InfoExtractor):
 
         title = video['name']
 
-        stream = video['stream']
+        stream = video.get('stream')
+        if not stream:
+            if video.get('authenticated') is True:
+                raise ExtractorError(
+                    'This video is only available via cable service provider subscription that'
+                    ' is not currently supported. You may want to use --cookies.', expected=True)
+            else:
+                raise ExtractorError('Unable to find stream')
         STREAM_URL_SUFFIX = 'streamUrl'
         formats = []
         for stream_kind in ('', 'hds'):

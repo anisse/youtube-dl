@@ -130,6 +130,8 @@ from .carambatv import (
 from .cbc import (
     CBCIE,
     CBCPlayerIE,
+    CBCWatchVideoIE,
+    CBCWatchIE,
 )
 from .cbs import CBSIE
 from .cbslocal import CBSLocalIE
@@ -539,6 +541,7 @@ from .nextmedia import (
 )
 from .nfb import NFBIE
 from .nfl import NFLIE
+from .nhk import NhkVodIE
 from .nhl import (
     NHLVideocenterIE,
     NHLNewsIE,
@@ -871,7 +874,6 @@ from .toypics import ToypicsUserIE, ToypicsIE
 from .traileraddict import TrailerAddictIE
 from .trilulilu import TriluliluIE
 from .trollvids import TrollvidsIE
-from .trutube import TruTubeIE
 from .tube8 import Tube8IE
 from .tubitv import TubiTvIE
 from .tudou import (
@@ -945,6 +947,7 @@ from .uplynk import (
 )
 from .urort import UrortIE
 from .urplay import URPlayIE
+from .usanetwork import USANetworkIE
 from .usatoday import USATodayIE
 from .ustream import UstreamIE, UstreamChannelIE
 from .ustudio import (
