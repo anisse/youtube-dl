@@ -554,7 +554,10 @@ from .nick import (
     NickDeIE,
 )
 from .niconico import NiconicoIE, NiconicoPlaylistIE
-from .ninecninemedia import NineCNineMediaIE
+from .ninecninemedia import (
+    NineCNineMediaStackIE,
+    NineCNineMediaIE,
+)
 from .ninegag import NineGagIE
 from .ninenow import NineNowIE
 from .nintendo import NintendoIE
@@ -636,7 +639,6 @@ from .phoenix import PhoenixIE
 from .photobucket import PhotobucketIE
 from .pinkbike import PinkbikeIE
 from .pladform import PladformIE
-from .played import PlayedIE
 from .playfm import PlayFMIE
 from .plays import PlaysTVIE
 from .playtvak import PlaytvakIE
