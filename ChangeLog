@@ -1,3 +1,10 @@
+version <unreleased>
+
+Extractors
+- [thvideo] Remove extractor (#10464)
+* [movingimage] Fix for the new site name (#10466)
+
+
 version 2016.08.31
 
 Extractors

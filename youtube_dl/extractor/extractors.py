@@ -194,6 +194,10 @@ from .ctsnews import CtsNewsIE
 from .ctv import CTVIE
 from .ctvnews import CTVNewsIE
 from .cultureunplugged import CultureUnpluggedIE
+from .curiositystream import (
+    CuriosityStreamIE,
+    CuriosityStreamCollectionIE,
+)
 from .cwtv import CWTVIE
 from .dailymail import DailyMailIE
 from .dailymotion import (
@@ -257,7 +261,6 @@ from .espn import ESPNIE
 from .esri import EsriVideoIE
 from .europa import EuropaIE
 from .everyonesmixtape import EveryonesMixtapeIE
-from .exfm import ExfmIE
 from .expotv import ExpoTVIE
 from .extremetube import ExtremeTubeIE
 from .eyedotv import EyedoTVIE
@@ -486,6 +489,7 @@ from .motherless import MotherlessIE
 from .motorsport import MotorsportIE
 from .movieclips import MovieClipsIE
 from .moviezine import MoviezineIE
+from .movingimage import MovingImageIE
 from .msn import MSNIE
 from .mtv import (
     MTVIE,
@@ -806,7 +810,6 @@ from .srgssr import (
     SRGSSRPlayIE,
 )
 from .srmediathek import SRMediathekIE
-from .ssa import SSAIE
 from .stanfordoc import StanfordOpenClassroomIE
 from .steam import SteamIE
 from .streamable import StreamableIE
@@ -869,10 +872,6 @@ from .tnaflix import (
     MovieFapIE,
 )
 from .toggle import ToggleIE
-from .thvideo import (
-    THVideoIE,
-    THVideoPlaylistIE
-)
 from .toutv import TouTvIE
 from .toypics import ToypicsUserIE, ToypicsIE
 from .traileraddict import TrailerAddictIE
