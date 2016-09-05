@@ -5,10 +5,13 @@ from .abc import (
     ABCIE,
     ABCIViewIE,
 )
-from .abc7news import Abc7NewsIE
 from .abcnews import (
     AbcNewsIE,
     AbcNewsVideoIE,
+)
+from .abcotvs import (
+    ABCOTVSIE,
+    ABCOTVSClipsIE,
 )
 from .academicearth import AcademicEarthCourseIE
 from .acast import (
@@ -916,6 +919,7 @@ from .tvc import (
 )
 from .tvigle import TvigleIE
 from .tvland import TVLandIE
+from .tvnoe import TVNoeIE
 from .tvp import (
     TVPEmbedIE,
     TVPIE,
