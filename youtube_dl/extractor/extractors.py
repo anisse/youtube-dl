@@ -395,6 +395,7 @@ from .ivi import (
     IviCompilationIE
 )
 from .ivideon import IvideonIE
+from .iwara import IwaraIE
 from .izlesene import IzleseneIE
 from .jeuxvideo import JeuxVideoIE
 from .jove import JoveIE
@@ -671,7 +672,10 @@ from .pluralsight import (
 )
 from .podomatic import PodomaticIE
 from .pokemon import PokemonIE
-from .polskieradio import PolskieRadioIE
+from .polskieradio import (
+    PolskieRadioIE,
+    PolskieRadioCategoryIE,
+)
 from .porn91 import Porn91IE
 from .porncom import PornComIE
 from .pornhd import PornHdIE
@@ -867,6 +871,7 @@ from .teletask import TeleTaskIE
 from .telewebion import TelewebionIE
 from .testurl import TestURLIE
 from .tf1 import TF1IE
+from .tfo import TFOIE
 from .theintercept import TheInterceptIE
 from .theplatform import (
     ThePlatformIE,
@@ -895,7 +900,6 @@ from .toutv import TouTvIE
 from .toypics import ToypicsUserIE, ToypicsIE
 from .traileraddict import TrailerAddictIE
 from .trilulilu import TriluliluIE
-from .trollvids import TrollvidsIE
 from .trutv import TruTVIE
 from .tube8 import Tube8IE
 from .tubitv import TubiTvIE
