@@ -293,6 +293,7 @@ from .fox import FOXIE
 from .foxgay import FoxgayIE
 from .foxnews import (
     FoxNewsIE,
+    FoxNewsArticleIE,
     FoxNewsInsiderIE,
 )
 from .foxsports import FoxSportsIE
@@ -533,6 +534,7 @@ from .nbc import (
     CSNNEIE,
     NBCIE,
     NBCNewsIE,
+    NBCOlympicsIE,
     NBCSportsIE,
     NBCSportsVPlayerIE,
 )
