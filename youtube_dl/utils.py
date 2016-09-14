@@ -91,6 +91,13 @@ ENGLISH_MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December']
 
+MONTH_NAMES = {
+    'en': ENGLISH_MONTH_NAMES,
+    'fr': [
+        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+}
+
 KNOWN_EXTENSIONS = (
     'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'aac',
     'flv', 'f4v', 'f4a', 'f4b',
@@ -1587,11 +1594,13 @@ def parse_count(s):
     return lookup_unit_table(_UNIT_TABLE, s)
 
 
-def month_by_name(name):
+def month_by_name(name, lang='en'):
     """ Return the number of a month by (locale-independently) English name """
 
+    month_names = MONTH_NAMES.get(lang, MONTH_NAMES['en'])
+
     try:
-        return ENGLISH_MONTH_NAMES.index(name) + 1
+        return month_names.index(name) + 1
     except ValueError:
         return None
 

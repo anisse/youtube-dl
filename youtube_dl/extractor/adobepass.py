@@ -72,8 +72,8 @@ class AdobePassIE(InfoExtractor):
         def raise_mvpd_required():
             raise ExtractorError(
                 'This video is only available for users of participating TV providers. '
-                'Use --ap-mso-id to specify Adobe Pass Multiple-system operator Identifier '
-                'and --netrc to provide account credentials.', expected=True)
+                'Use --ap-mso to specify Adobe Pass Multiple-system operator Identifier '
+                'and --ap-username and --ap-password or --netrc to provide account credentials.', expected=True)
 
         mvpd_headers = {
             'ap_42': 'anonymous',
@@ -83,21 +83,17 @@ class AdobePassIE(InfoExtractor):
         }
 
         guid = xml_text(resource, 'guid')
-        retries = self._downloader.params.get('ap_retries', 3)
         count = 0
-        while count < retries:
+        while count < 2:
             requestor_info = self._downloader.cache.load('mvpd', requestor_id) or {}
             authn_token = requestor_info.get('authn_token')
             if authn_token and is_expired(authn_token, 'simpleTokenExpires'):
                 authn_token = None
             if not authn_token:
                 # TODO add support for other TV Providers
-                mso_id = self._downloader.params.get('ap_mso_id')
+                mso_id = self._downloader.params.get('ap_mso')
                 if not mso_id:
                     raise_mvpd_required()
-                if mso_id not in MSO_INFO:
-                    raise ExtractorError(
-                        'Unsupported TV Provider, use --list-ap-mso-ids to get a list of supported TV Providers' % mso_id, expected=True)
                 username, password = self._get_login_info('ap_username', 'ap_password', mso_id)
                 if not username or not password:
                     raise_mvpd_required()

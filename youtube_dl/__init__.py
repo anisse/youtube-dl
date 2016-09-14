@@ -120,9 +120,9 @@ def _real_main(argv=None):
                 desc += ' (Example: "%s%s:%s" )' % (ie.SEARCH_KEY, random.choice(_COUNTS), random.choice(_SEARCHES))
             write_string(desc + '\n', out=sys.stdout)
         sys.exit(0)
-    if opts.list_ap_mso_ids:
+    if opts.ap_list_mso:
         table = [[mso_id, mso_info['name']] for mso_id, mso_info in MSO_INFO.items()]
-        write_string('Supported TV Providers:\n' + render_table(['mso id', 'mso name'], table) + '\n', out=sys.stdout)
+        write_string('Supported TV Providers:\n' + render_table(['mso', 'mso name'], table) + '\n', out=sys.stdout)
         sys.exit(0)
 
     # Conflicting, missing and erroneous options
@@ -165,6 +165,8 @@ def _real_main(argv=None):
             parser.error('max sleep interval must be greater than or equal to min sleep interval')
     else:
         opts.max_sleep_interval = opts.sleep_interval
+    if opts.ap_mso and opts.ap_mso not in MSO_INFO:
+        parser.error('Unsupported TV Provider, use --ap-list-mso to get a list of supported TV Providers')
 
     def parse_retries(retries):
         if retries in ('inf', 'infinite'):
@@ -179,8 +181,6 @@ def _real_main(argv=None):
         opts.retries = parse_retries(opts.retries)
     if opts.fragment_retries is not None:
         opts.fragment_retries = parse_retries(opts.fragment_retries)
-    if opts.ap_retries is not None:
-        opts.ap_retries = parse_retries(opts.ap_retries)
     if opts.buffersize is not None:
         numeric_buffersize = FileDownloader.parse_bytes(opts.buffersize)
         if numeric_buffersize is None:
@@ -305,10 +305,9 @@ def _real_main(argv=None):
         'password': opts.password,
         'twofactor': opts.twofactor,
         'videopassword': opts.videopassword,
-        'ap_mso_id': opts.ap_mso_id,
+        'ap_mso': opts.ap_mso,
         'ap_username': opts.ap_username,
         'ap_password': opts.ap_password,
-        'ap_retries': opts.ap_retries,
         'quiet': (opts.quiet or any_getting or any_printing),
         'no_warnings': opts.no_warnings,
         'forceurl': opts.geturl,
