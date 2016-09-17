@@ -87,6 +87,9 @@ class InfoExtractor(object):
 
                     Potential fields:
                     * url        Mandatory. The URL of the video file
+                    * manifest_url
+                                 The URL of the manifest file in case of
+                                 fragmented media (DASH, hls, hds)
                     * ext        Will be calculated from URL if missing
                     * format     A human-readable description of the format
                                  ("mp4 container with h264/opus").
@@ -115,6 +118,11 @@ class InfoExtractor(object):
                                  download, lower-case.
                                  "http", "https", "rtsp", "rtmp", "rtmpe",
                                  "m3u8", "m3u8_native" or "http_dash_segments".
+                    * fragments  A list of fragments of the fragmented media,
+                                 with the following entries:
+                                 * "url" (mandatory) - fragment's URL
+                                 * "duration" (optional, int or float)
+                                 * "filesize" (optional, int)
                     * preference Order number of this format. If this field is
                                  present and not None, the formats get sorted
                                  by this field, regardless of all other values.
@@ -1142,6 +1150,7 @@ class InfoExtractor(object):
             formats.append({
                 'format_id': format_id,
                 'url': manifest_url,
+                'manifest_url': manifest_url,
                 'ext': 'flv' if bootstrap_info is not None else None,
                 'tbr': tbr,
                 'width': width,
@@ -1247,9 +1256,11 @@ class InfoExtractor(object):
                 # format_id intact.
                 if not live:
                     format_id.append(stream_name if stream_name else '%d' % (tbr if tbr else len(formats)))
+                manifest_url = format_url(line.strip())
                 f = {
                     'format_id': '-'.join(format_id),
-                    'url': format_url(line.strip()),
+                    'url': manifest_url,
+                    'manifest_url': manifest_url,
                     'tbr': tbr,
                     'ext': ext,
                     'fps': float_or_none(last_info.get('FRAME-RATE')),
@@ -1521,9 +1532,10 @@ class InfoExtractor(object):
         mpd_base_url = re.match(r'https?://.+/', urlh.geturl()).group()
 
         return self._parse_mpd_formats(
-            compat_etree_fromstring(mpd.encode('utf-8')), mpd_id, mpd_base_url, formats_dict=formats_dict)
+            compat_etree_fromstring(mpd.encode('utf-8')), mpd_id, mpd_base_url,
+            formats_dict=formats_dict, mpd_url=mpd_url)
 
-    def _parse_mpd_formats(self, mpd_doc, mpd_id=None, mpd_base_url='', formats_dict={}):
+    def _parse_mpd_formats(self, mpd_doc, mpd_id=None, mpd_base_url='', formats_dict={}, mpd_url=None):
         """
         Parse formats from MPD manifest.
         References:
@@ -1544,42 +1556,52 @@ class InfoExtractor(object):
 
         def extract_multisegment_info(element, ms_parent_info):
             ms_info = ms_parent_info.copy()
+
+            # As per [1, 5.3.9.2.2] SegmentList and SegmentTemplate share some
+            # common attributes and elements.  We will only extract relevant
+            # for us.
+            def extract_common(source):
+                segment_timeline = source.find(_add_ns('SegmentTimeline'))
+                if segment_timeline is not None:
+                    s_e = segment_timeline.findall(_add_ns('S'))
+                    if s_e:
+                        ms_info['total_number'] = 0
+                        ms_info['s'] = []
+                        for s in s_e:
+                            r = int(s.get('r', 0))
+                            ms_info['total_number'] += 1 + r
+                            ms_info['s'].append({
+                                't': int(s.get('t', 0)),
+                                # @d is mandatory (see [1, 5.3.9.6.2, Table 17, page 60])
+                                'd': int(s.attrib['d']),
+                                'r': r,
+                            })
+                start_number = source.get('startNumber')
+                if start_number:
+                    ms_info['start_number'] = int(start_number)
+                timescale = source.get('timescale')
+                if timescale:
+                    ms_info['timescale'] = int(timescale)
+                segment_duration = source.get('duration')
+                if segment_duration:
+                    ms_info['segment_duration'] = int(segment_duration)
+
+            def extract_Initialization(source):
+                initialization = source.find(_add_ns('Initialization'))
+                if initialization is not None:
+                    ms_info['initialization_url'] = initialization.attrib['sourceURL']
+
             segment_list = element.find(_add_ns('SegmentList'))
             if segment_list is not None:
+                extract_common(segment_list)
+                extract_Initialization(segment_list)
                 segment_urls_e = segment_list.findall(_add_ns('SegmentURL'))
                 if segment_urls_e:
                     ms_info['segment_urls'] = [segment.attrib['media'] for segment in segment_urls_e]
-                initialization = segment_list.find(_add_ns('Initialization'))
-                if initialization is not None:
-                    ms_info['initialization_url'] = initialization.attrib['sourceURL']
             else:
                 segment_template = element.find(_add_ns('SegmentTemplate'))
                 if segment_template is not None:
-                    start_number = segment_template.get('startNumber')
-                    if start_number:
-                        ms_info['start_number'] = int(start_number)
-                    segment_timeline = segment_template.find(_add_ns('SegmentTimeline'))
-                    if segment_timeline is not None:
-                        s_e = segment_timeline.findall(_add_ns('S'))
-                        if s_e:
-                            ms_info['total_number'] = 0
-                            ms_info['s'] = []
-                            for s in s_e:
-                                r = int(s.get('r', 0))
-                                ms_info['total_number'] += 1 + r
-                                ms_info['s'].append({
-                                    't': int(s.get('t', 0)),
-                                    # @d is mandatory (see [1, 5.3.9.6.2, Table 17, page 60])
-                                    'd': int(s.attrib['d']),
-                                    'r': r,
-                                })
-                    else:
-                        timescale = segment_template.get('timescale')
-                        if timescale:
-                            ms_info['timescale'] = int(timescale)
-                        segment_duration = segment_template.get('duration')
-                        if segment_duration:
-                            ms_info['segment_duration'] = int(segment_duration)
+                    extract_common(segment_template)
                     media_template = segment_template.get('media')
                     if media_template:
                         ms_info['media_template'] = media_template
@@ -1587,10 +1609,13 @@ class InfoExtractor(object):
                     if initialization:
                         ms_info['initialization_url'] = initialization
                     else:
-                        initialization = segment_template.find(_add_ns('Initialization'))
-                        if initialization is not None:
-                            ms_info['initialization_url'] = initialization.attrib['sourceURL']
+                        extract_Initialization(segment_template)
             return ms_info
+
+        def combine_url(base_url, target_url):
+            if re.match(r'^https?://', target_url):
+                return target_url
+            return '%s%s%s' % (base_url, '' if base_url.endswith('/') else '/', target_url)
 
         mpd_duration = parse_duration(mpd_doc.get('mediaPresentationDuration'))
         formats = []
@@ -1634,6 +1659,7 @@ class InfoExtractor(object):
                         f = {
                             'format_id': '%s-%s' % (mpd_id, representation_id) if mpd_id else representation_id,
                             'url': base_url,
+                            'manifest_url': mpd_url,
                             'ext': mimetype2ext(mime_type),
                             'width': int_or_none(representation_attrib.get('width')),
                             'height': int_or_none(representation_attrib.get('height')),
@@ -1648,9 +1674,7 @@ class InfoExtractor(object):
                         }
                         representation_ms_info = extract_multisegment_info(representation, adaption_set_ms_info)
                         if 'segment_urls' not in representation_ms_info and 'media_template' in representation_ms_info:
-                            if 'total_number' not in representation_ms_info and 'segment_duration':
-                                segment_duration = float(representation_ms_info['segment_duration']) / float(representation_ms_info['timescale'])
-                                representation_ms_info['total_number'] = int(math.ceil(float(period_duration) / segment_duration))
+
                             media_template = representation_ms_info['media_template']
                             media_template = media_template.replace('$RepresentationID$', representation_id)
                             media_template = re.sub(r'\$(Number|Bandwidth|Time)\$', r'%(\1)d', media_template)
@@ -1659,46 +1683,79 @@ class InfoExtractor(object):
 
                             # As per [1, 5.3.9.4.4, Table 16, page 55] $Number$ and $Time$
                             # can't be used at the same time
-                            if '%(Number' in media_template:
-                                representation_ms_info['segment_urls'] = [
-                                    media_template % {
+                            if '%(Number' in media_template and 's' not in representation_ms_info:
+                                segment_duration = None
+                                if 'total_number' not in representation_ms_info and 'segment_duration':
+                                    segment_duration = float_or_none(representation_ms_info['segment_duration'], representation_ms_info['timescale'])
+                                    representation_ms_info['total_number'] = int(math.ceil(float(period_duration) / segment_duration))
+                                representation_ms_info['fragments'] = [{
+                                    'url': media_template % {
                                         'Number': segment_number,
                                         'Bandwidth': representation_attrib.get('bandwidth'),
-                                    }
-                                    for segment_number in range(
-                                        representation_ms_info['start_number'],
-                                        representation_ms_info['total_number'] + representation_ms_info['start_number'])]
+                                    },
+                                    'duration': segment_duration,
+                                } for segment_number in range(
+                                    representation_ms_info['start_number'],
+                                    representation_ms_info['total_number'] + representation_ms_info['start_number'])]
                             else:
-                                representation_ms_info['segment_urls'] = []
+                                # $Number*$ or $Time$ in media template with S list available
+                                # Example $Number*$: http://www.svtplay.se/klipp/9023742/stopptid-om-bjorn-borg
+                                # Example $Time$: https://play.arkena.com/embed/avp/v2/player/media/b41dda37-d8e7-4d3f-b1b5-9a9db578bdfe/1/129411
+                                representation_ms_info['fragments'] = []
                                 segment_time = 0
+                                segment_d = None
+                                segment_number = representation_ms_info['start_number']
 
                                 def add_segment_url():
-                                    representation_ms_info['segment_urls'].append(
-                                        media_template % {
-                                            'Time': segment_time,
-                                            'Bandwidth': representation_attrib.get('bandwidth'),
-                                        }
-                                    )
+                                    segment_url = media_template % {
+                                        'Time': segment_time,
+                                        'Bandwidth': representation_attrib.get('bandwidth'),
+                                        'Number': segment_number,
+                                    }
+                                    representation_ms_info['fragments'].append({
+                                        'url': segment_url,
+                                        'duration': float_or_none(segment_d, representation_ms_info['timescale']),
+                                    })
 
                                 for num, s in enumerate(representation_ms_info['s']):
                                     segment_time = s.get('t') or segment_time
+                                    segment_d = s['d']
                                     add_segment_url()
+                                    segment_number += 1
                                     for r in range(s.get('r', 0)):
-                                        segment_time += s['d']
+                                        segment_time += segment_d
                                         add_segment_url()
-                                    segment_time += s['d']
-                        if 'segment_urls' in representation_ms_info:
+                                        segment_number += 1
+                                    segment_time += segment_d
+                        elif 'segment_urls' in representation_ms_info and 's' in representation_ms_info:
+                            # No media template
+                            # Example: https://www.youtube.com/watch?v=iXZV5uAYMJI
+                            # or any YouTube dashsegments video
+                            fragments = []
+                            s_num = 0
+                            for segment_url in representation_ms_info['segment_urls']:
+                                s = representation_ms_info['s'][s_num]
+                                for r in range(s.get('r', 0) + 1):
+                                    fragments.append({
+                                        'url': segment_url,
+                                        'duration': float_or_none(s['d'], representation_ms_info['timescale']),
+                                    })
+                            representation_ms_info['fragments'] = fragments
+                        # NB: MPD manifest may contain direct URLs to unfragmented media.
+                        # No fragments key is present in this case.
+                        if 'fragments' in representation_ms_info:
                             f.update({
-                                'segment_urls': representation_ms_info['segment_urls'],
+                                'fragments': [],
                                 'protocol': 'http_dash_segments',
                             })
                             if 'initialization_url' in representation_ms_info:
                                 initialization_url = representation_ms_info['initialization_url'].replace('$RepresentationID$', representation_id)
-                                f.update({
-                                    'initialization_url': initialization_url,
-                                })
                                 if not f.get('url'):
                                     f['url'] = initialization_url
+                                f['fragments'].append({'url': initialization_url})
+                            f['fragments'].extend(representation_ms_info['fragments'])
+                            for fragment in f['fragments']:
+                                fragment['url'] = combine_url(base_url, fragment['url'])
                         try:
                             existing_format = next(
                                 fo for fo in formats
