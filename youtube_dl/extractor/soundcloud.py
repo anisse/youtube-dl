@@ -53,6 +53,7 @@ class SoundcloudIE(InfoExtractor):
                 'uploader': 'E.T. ExTerrestrial Music',
                 'title': 'Lostin Powers - She so Heavy (SneakPreview) Adrian Ackers Blueprint 1',
                 'duration': 143,
+                'license': 'all-rights-reserved',
             }
         },
         # not streamable song
@@ -66,6 +67,7 @@ class SoundcloudIE(InfoExtractor):
                 'uploader': 'The Royal Concept',
                 'upload_date': '20120521',
                 'duration': 227,
+                'license': 'all-rights-reserved',
             },
             'params': {
                 # rtmp
@@ -84,6 +86,7 @@ class SoundcloudIE(InfoExtractor):
                 'description': 'test chars:  \"\'/\\ä↭',
                 'upload_date': '20131209',
                 'duration': 9,
+                'license': 'all-rights-reserved',
             },
         },
         # private link (alt format)
@@ -98,6 +101,7 @@ class SoundcloudIE(InfoExtractor):
                 'description': 'test chars:  \"\'/\\ä↭',
                 'upload_date': '20131209',
                 'duration': 9,
+                'license': 'all-rights-reserved',
             },
         },
         # downloadable song
@@ -112,6 +116,7 @@ class SoundcloudIE(InfoExtractor):
                 'uploader': 'oddsamples',
                 'upload_date': '20140109',
                 'duration': 17,
+                'license': 'cc-by-sa',
             },
         },
     ]
@@ -138,20 +143,20 @@ class SoundcloudIE(InfoExtractor):
         name = full_title or track_id
         if quiet:
             self.report_extraction(name)
-
-        thumbnail = info['artwork_url']
-        if thumbnail is not None:
+        thumbnail = info.get('artwork_url')
+        if isinstance(thumbnail, compat_str):
             thumbnail = thumbnail.replace('-large', '-t500x500')
         ext = 'mp3'
         result = {
             'id': track_id,
-            'uploader': info['user']['username'],
-            'upload_date': unified_strdate(info['created_at']),
+            'uploader': info.get('user', {}).get('username'),
+            'upload_date': unified_strdate(info.get('created_at')),
             'title': info['title'],
-            'description': info['description'],
+            'description': info.get('description'),
             'thumbnail': thumbnail,
             'duration': int_or_none(info.get('duration'), 1000),
             'webpage_url': info.get('permalink_url'),
+            'license': info.get('license'),
         }
         formats = []
         if info.get('downloadable', False):
@@ -221,7 +226,7 @@ class SoundcloudIE(InfoExtractor):
             raise ExtractorError('Invalid URL: %s' % url)
 
         track_id = mobj.group('track_id')
-        token = None
+
         if track_id is not None:
             info_json_url = 'http://api.soundcloud.com/tracks/' + track_id + '.json?client_id=' + self._CLIENT_ID
             full_title = track_id
