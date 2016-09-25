@@ -516,6 +516,7 @@ from .movingimage import MovingImageIE
 from .msn import MSNIE
 from .mtv import (
     MTVIE,
+    MTVVideoIE,
     MTVServicesEmbeddedIE,
     MTVDEIE,
 )
@@ -611,13 +612,14 @@ from .nowtv import (
 )
 from .noz import NozIE
 from .npo import (
+    AndereTijdenIE,
     NPOIE,
     NPOLiveIE,
     NPORadioIE,
     NPORadioFragmentIE,
     SchoolTVIE,
     VPROIE,
-    WNLIE
+    WNLIE,
 )
 from .npr import NprIE
 from .nrk import (
