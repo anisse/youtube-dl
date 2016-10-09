@@ -1,3 +1,13 @@
+version <unreleased>
+
+Core
+* [Makefile] Support for GNU make < 4 is fixed; BSD make dropped (#9387)
+
+Extractors
+* [allocine] Fix extraction (#10860)
++ [nextmedia] Recognize action news on AppleDaily
+
+
 version 2016.10.07
 
 Extractors
