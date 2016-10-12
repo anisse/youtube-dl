@@ -1,10 +1,11 @@
-version <unreleased>
+version 2016.10.12
 
 Core
 + Support HTML media elements without child nodes
 * [Makefile] Support for GNU make < 4 is fixed; BSD make dropped (#9387)
 
 Extractors
+* [dailymotion] Fix extraction (#10901)
 * [vimeo:review] Fix extraction (#10900)
 * [nhl] Correctly handle invalid formats (#10713)
 * [footyroom] Fix extraction (#10810)
@@ -12,6 +13,7 @@ Extractors
 + [hbo] Add support for episode pages (#10892)
 * [allocine] Fix extraction (#10860)
 + [nextmedia] Recognize action news on AppleDaily
+* [lego] Improve info extraction and bypass geo restriction (#10872)
 
 
 version 2016.10.07
