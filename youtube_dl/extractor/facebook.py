@@ -244,8 +244,10 @@ class FacebookIE(InfoExtractor):
             r'handleServerJS\(({.+})(?:\);|,")', webpage, 'server js data', default='{}'), video_id)
         for item in server_js_data.get('instances', []):
             if item[1][0] == 'VideoConfig':
-                video_data = item[2][0]['videoData']
-                break
+                video_item = item[2][0]
+                if video_item.get('video_id') == video_id:
+                    video_data = video_item['videoData']
+                    break
 
         if not video_data:
             if not fatal_if_no_video:
@@ -255,6 +257,8 @@ class FacebookIE(InfoExtractor):
                 raise ExtractorError(
                     'The video is not available, Facebook said: "%s"' % m_msg.group(1),
                     expected=True)
+            elif '>You must log in to continue' in webpage:
+                self.raise_login_required()
             else:
                 raise ExtractorError('Cannot parse data')
 
