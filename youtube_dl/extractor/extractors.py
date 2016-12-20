@@ -699,6 +699,7 @@ from .periscope import (
 from .philharmoniedeparis import PhilharmonieDeParisIE
 from .phoenix import PhoenixIE
 from .photobucket import PhotobucketIE
+from .piksel import PikselIE
 from .pinkbike import PinkbikeIE
 from .pladform import PladformIE
 from .playfm import PlayFMIE
@@ -1023,6 +1024,7 @@ from .udemy import (
     UdemyCourseIE
 )
 from .udn import UDNEmbedIE
+from .uktvplay import UKTVPlayIE
 from .digiteka import DigitekaIE
 from .unistra import UnistraIE
 from .uol import UOLIE
