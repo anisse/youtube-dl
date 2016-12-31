@@ -206,7 +206,14 @@ class TwitchChapterIE(TwitchItemBaseIE):
 
 class TwitchVodIE(TwitchItemBaseIE):
     IE_NAME = 'twitch:vod'
-    _VALID_URL = r'%s/[^/]+/v/(?P<id>\d+)' % TwitchBaseIE._VALID_URL_BASE
+    _VALID_URL = r'''(?x)
+                    https?://
+                        (?:
+                            (?:www\.)?twitch\.tv/[^/]+/v/|
+                            player\.twitch\.tv/\?.*?\bvideo=v
+                        )
+                        (?P<id>\d+)
+                    '''
     _ITEM_TYPE = 'vod'
     _ITEM_SHORTCUT = 'v'
 
@@ -249,6 +256,9 @@ class TwitchVodIE(TwitchItemBaseIE):
             'skip_download': True,
         },
         'skip': 'HTTP Error 404: Not Found',
+    }, {
+        'url': 'http://player.twitch.tv/?t=5m10s&video=v6528877',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
