@@ -38,10 +38,7 @@ from .amcnetworks import AMCNetworksIE
 from .animeondemand import AnimeOnDemandIE
 from .anitube import AnitubeIE
 from .anysex import AnySexIE
-from .aol import (
-    AolIE,
-    AolFeaturesIE,
-)
+from .aol import AolIE
 from .allocine import AllocineIE
 from .aparat import AparatIE
 from .appleconnect import AppleConnectIE
@@ -813,7 +810,6 @@ from .sbs import SBSIE
 from .scivee import SciVeeIE
 from .screencast import ScreencastIE
 from .screencastomatic import ScreencastOMaticIE
-from .screenjunkies import ScreenJunkiesIE
 from .seeker import SeekerIE
 from .senateisvp import SenateISVPIE
 from .sendtonews import SendtoNewsIE
