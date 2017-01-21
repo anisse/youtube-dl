@@ -77,6 +77,10 @@ from .awaan import (
     AWAANLiveIE,
     AWAANSeasonIE,
 )
+from .azmedien import (
+    AZMedienIE,
+    AZMedienShowIE,
+)
 from .azubu import AzubuIE, AzubuLiveIE
 from .baidu import BaiduVideoIE
 from .bambuser import BambuserIE, BambuserChannelIE
