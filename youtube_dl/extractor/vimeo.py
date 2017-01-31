@@ -21,7 +21,9 @@ from ..utils import (
     sanitized_Request,
     smuggle_url,
     std_headers,
+    try_get,
     unified_strdate,
+    unified_timestamp,
     unsmuggle_url,
     urlencode_postdata,
     unescapeHTML,
@@ -213,11 +215,13 @@ class VimeoIE(VimeoBaseInfoExtractor):
                 'ext': 'mp4',
                 'title': "youtube-dl test video - \u2605 \" ' \u5e78 / \\ \u00e4 \u21ad \U0001d550",
                 'description': 'md5:2d3305bad981a06ff79f027f19865021',
+                'timestamp': 1355990239,
                 'upload_date': '20121220',
                 'uploader_url': r're:https?://(?:www\.)?vimeo\.com/user7108434',
                 'uploader_id': 'user7108434',
                 'uploader': 'Filippo Valsorda',
                 'duration': 10,
+                'license': 'by-sa',
             },
         },
         {
@@ -258,6 +262,7 @@ class VimeoIE(VimeoBaseInfoExtractor):
                 'id': '68375962',
                 'ext': 'mp4',
                 'title': 'youtube-dl password protected test video',
+                'timestamp': 1371200155,
                 'upload_date': '20130614',
                 'uploader_url': r're:https?://(?:www\.)?vimeo\.com/user18948128',
                 'uploader_id': 'user18948128',
@@ -280,7 +285,8 @@ class VimeoIE(VimeoBaseInfoExtractor):
                 'uploader_url': r're:https?://(?:www\.)?vimeo\.com/atencio',
                 'uploader_id': 'atencio',
                 'uploader': 'Peter Atencio',
-                'upload_date': '20130927',
+                'timestamp': 1380339469,
+                'upload_date': '20130928',
                 'duration': 187,
             },
         },
@@ -292,6 +298,7 @@ class VimeoIE(VimeoBaseInfoExtractor):
                 'ext': 'mp4',
                 'title': 'The New Vimeo Player (You Know, For Videos)',
                 'description': 'md5:2ec900bf97c3f389378a96aee11260ea',
+                'timestamp': 1381846109,
                 'upload_date': '20131015',
                 'uploader_url': r're:https?://(?:www\.)?vimeo\.com/staff',
                 'uploader_id': 'staff',
@@ -323,6 +330,7 @@ class VimeoIE(VimeoBaseInfoExtractor):
                 'uploader': 'The DMCI',
                 'uploader_url': r're:https?://(?:www\.)?vimeo\.com/dmci',
                 'uploader_id': 'dmci',
+                'timestamp': 1324343742,
                 'upload_date': '20111220',
                 'description': 'md5:ae23671e82d05415868f7ad1aec21147',
             },
@@ -338,6 +346,7 @@ class VimeoIE(VimeoBaseInfoExtractor):
                 'uploader': 'Casey Donahue',
                 'uploader_url': r're:https?://(?:www\.)?vimeo\.com/caseydonahue',
                 'uploader_id': 'caseydonahue',
+                'timestamp': 1250886430,
                 'upload_date': '20090821',
                 'description': 'md5:bdbf314014e58713e6e5b66eb252f4a6',
             },
@@ -486,6 +495,9 @@ class VimeoIE(VimeoBaseInfoExtractor):
                     '%s said: %s' % (self.IE_NAME, seed_status['title']),
                     expected=True)
 
+        cc_license = None
+        timestamp = None
+
         # Extract the config JSON
         try:
             try:
@@ -499,8 +511,12 @@ class VimeoIE(VimeoBaseInfoExtractor):
                     vimeo_clip_page_config = self._search_regex(
                         r'vimeo\.clip_page_config\s*=\s*({.+?});', webpage,
                         'vimeo clip page config')
-                    config_url = self._parse_json(
-                        vimeo_clip_page_config, video_id)['player']['config_url']
+                    page_config = self._parse_json(vimeo_clip_page_config, video_id)
+                    config_url = page_config['player']['config_url']
+                    cc_license = page_config.get('cc_license')
+                    timestamp = try_get(
+                        page_config, lambda x: x['clip']['uploaded_on'],
+                        compat_str)
                 config_json = self._download_webpage(config_url, video_id)
                 config = json.loads(config_json)
             except RegexNotFoundError:
@@ -569,10 +585,10 @@ class VimeoIE(VimeoBaseInfoExtractor):
             self._downloader.report_warning('Cannot find video description')
 
         # Extract upload date
-        video_upload_date = None
-        mobj = re.search(r'<time[^>]+datetime="([^"]+)"', webpage)
-        if mobj is not None:
-            video_upload_date = unified_strdate(mobj.group(1))
+        if not timestamp:
+            timestamp = self._search_regex(
+                r'<time[^>]+datetime="([^"]+)"', webpage,
+                'timestamp', default=None)
 
         try:
             view_count = int(self._search_regex(r'UserPlays:(\d+)', webpage, 'view count'))
@@ -609,15 +625,22 @@ class VimeoIE(VimeoBaseInfoExtractor):
         info_dict = self._parse_config(config, video_id)
         formats.extend(info_dict['formats'])
         self._vimeo_sort_formats(formats)
+
+        if not cc_license:
+            cc_license = self._search_regex(
+                r'<link[^>]+rel=["\']license["\'][^>]+href=(["\'])(?P<license>(?:(?!\1).)+)\1',
+                webpage, 'license', default=None, group='license')
+
         info_dict.update({
             'id': video_id,
             'formats': formats,
-            'upload_date': video_upload_date,
+            'timestamp': unified_timestamp(timestamp),
             'description': video_description,
             'webpage_url': url,
             'view_count': view_count,
             'like_count': like_count,
             'comment_count': comment_count,
+            'license': cc_license,
         })
 
         return info_dict
