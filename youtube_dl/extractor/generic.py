@@ -29,6 +29,7 @@ from ..utils import (
     UnsupportedError,
     xpath_text,
 )
+from .commonprotocols import RtmpIE
 from .brightcove import (
     BrightcoveLegacyIE,
     BrightcoveNewIE,
@@ -946,6 +947,19 @@ class GenericIE(InfoExtractor):
                 'uploader_id': 'NationalArchives08',
                 'title': 'Webinar: Using Discovery, The National Archives’ online catalogue',
             },
+        },
+        # jwplayer rtmp
+        {
+            'url': 'http://www.suffolk.edu/sjc/',
+            'info_dict': {
+                'id': 'sjclive',
+                'ext': 'flv',
+                'title': 'Massachusetts Supreme Judicial Court Oral Arguments',
+                'uploader': 'www.suffolk.edu',
+            },
+            'params': {
+                'skip_download': True,
+            }
         },
         # rtl.nl embed
         {
@@ -2487,6 +2501,8 @@ class GenericIE(InfoExtractor):
         def check_video(vurl):
             if YoutubeIE.suitable(vurl):
                 return True
+            if RtmpIE.suitable(vurl):
+                return True
             vpath = compat_urlparse.urlparse(vurl).path
             vext = determine_ext(vpath)
             return '.' in vpath and vext not in ('swf', 'png', 'jpg', 'srt', 'sbv', 'sub', 'vtt', 'ttml', 'js')
@@ -2593,6 +2609,15 @@ class GenericIE(InfoExtractor):
                 'title': video_title,
                 'age_limit': age_limit,
             }
+
+            if RtmpIE.suitable(video_url):
+                entry_info_dict.update({
+                    '_type': 'url_transparent',
+                    'ie_key': RtmpIE.ie_key(),
+                    'url': video_url,
+                })
+                entries.append(entry_info_dict)
+                continue
 
             ext = determine_ext(video_url)
             if ext == 'smil':
