@@ -9,7 +9,8 @@ python:
   - "3.6"
 sudo: false
 env:
-  - TESTS=complete
+  - YTDL_TEST_SET=core
+  - YTDL_TEST_SET=download
   - TESTS=regression_1-of-7
   - TESTS=regression_2-of-7
   - TESTS=regression_3-of-7
@@ -17,8 +18,6 @@ env:
   - TESTS=regression_5-of-7
   - TESTS=regression_6-of-7
   - TESTS=regression_7-of-7
-  - YTDL_TEST_SET=core
-  - YTDL_TEST_SET=download
 matrix:
   allow_failures:
     - env: TESTS=complete
