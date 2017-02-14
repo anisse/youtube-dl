@@ -20,7 +20,6 @@ env:
   - TESTS=regression_7-of-7
 matrix:
   allow_failures:
-    - env: TESTS=complete
     - env: YTDL_TEST_SET=download
 
 script: devscripts/travis.sh
