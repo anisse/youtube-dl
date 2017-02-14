@@ -17,11 +17,16 @@ env:
   - TESTS=regression_5-of-7
   - TESTS=regression_6-of-7
   - TESTS=regression_7-of-7
+  - YTDL_TEST_SET=core
+  - YTDL_TEST_SET=download
 matrix:
   allow_failures:
     - env: TESTS=complete
+    - env: YTDL_TEST_SET=download
 
 script: devscripts/travis.sh
+before_script:
+  - chmod +x ./devscripts/run_tests.sh
 notifications:
   email:
   # TODO: change before merge to put back project members !

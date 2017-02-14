@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "$TESTS" = "complete" ]; then
-	exec nosetests test --verbose
+	exec ./devscripts/run_tests.sh
 else
 	exec ./devscripts/regdetect.py
 fi
