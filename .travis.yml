@@ -24,8 +24,6 @@ matrix:
     - env: YTDL_TEST_SET=download
 
 script: devscripts/travis.sh
-before_script:
-  - chmod +x ./devscripts/run_tests.sh
 notifications:
   email:
   # TODO: change before merge to put back project members !
