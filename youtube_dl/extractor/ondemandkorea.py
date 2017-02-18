@@ -10,6 +10,7 @@ from ..utils import (
 
 class OnDemandKoreaIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.)?ondemandkorea\.com/(?P<id>[^/]+)\.html'
+    _GEO_COUNTRIES = ['US', 'CA']
     _TEST = {
         'url': 'http://www.ondemandkorea.com/ask-us-anything-e43.html',
         'info_dict': {
@@ -35,7 +36,8 @@ class OnDemandKoreaIE(InfoExtractor):
 
         if 'msg_block_01.png' in webpage:
             self.raise_geo_restricted(
-                'This content is not available in your region')
+                msg='This content is not available in your region',
+                countries=self._GEO_COUNTRIES)
 
         if 'This video is only available to ODK PLUS members.' in webpage:
             raise ExtractorError(
