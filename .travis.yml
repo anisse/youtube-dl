@@ -21,6 +21,7 @@ env:
 matrix:
   allow_failures:
     - env: YTDL_TEST_SET=download
+    - env: YTDL_TEST_SET=core
 
 script: devscripts/travis.sh
 notifications:
