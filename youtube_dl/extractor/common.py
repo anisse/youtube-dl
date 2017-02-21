@@ -379,12 +379,28 @@ class InfoExtractor(object):
 
     def initialize(self):
         """Initializes an instance (authentication, etc)."""
-        self.__initialize_geo_bypass()
+        self._initialize_geo_bypass(self._GEO_COUNTRIES)
         if not self._ready:
             self._real_initialize()
             self._ready = True
 
-    def __initialize_geo_bypass(self):
+    def _initialize_geo_bypass(self, countries):
+        """
+        Initialize geo restriction bypass mechanism.
+
+        This method is used to initialize geo bypass mechanism based on faking
+        X-Forwarded-For HTTP header. A random country from provided country list
+        is selected and a random IP belonging to this country is generated. This
+        IP will be passed as X-Forwarded-For HTTP header in all subsequent
+        HTTP requests.
+
+        This method will be used for initial geo bypass mechanism initialization
+        during the instance initialization with _GEO_COUNTRIES.
+
+        You may also manually call it from extractor's code if geo countries
+        information is not available beforehand (e.g. obtained during
+        extraction) or due to some another reason.
+        """
         if not self._x_forwarded_for_ip:
             country_code = self._downloader.params.get('geo_bypass_country', None)
             # If there is no explicit country for geo bypass specified and
@@ -393,13 +409,14 @@ class InfoExtractor(object):
             if (not country_code and
                     self._GEO_BYPASS and
                     self._downloader.params.get('geo_bypass', True) and
-                    self._GEO_COUNTRIES):
-                country_code = random.choice(self._GEO_COUNTRIES)
+                    countries):
+                country_code = random.choice(countries)
             if country_code:
                 self._x_forwarded_for_ip = GeoUtils.random_ipv4(country_code)
                 if self._downloader.params.get('verbose', False):
                     self._downloader.to_stdout(
-                        '[debug] Using fake %s IP as X-Forwarded-For.' % self._x_forwarded_for_ip)
+                        '[debug] Using fake IP %s (%s) as X-Forwarded-For.'
+                        % (self._x_forwarded_for_ip, country_code.upper()))
 
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
@@ -428,10 +445,12 @@ class InfoExtractor(object):
                 self._downloader.params.get('geo_bypass', True) and
                 not self._x_forwarded_for_ip and
                 countries):
-            self._x_forwarded_for_ip = GeoUtils.random_ipv4(random.choice(countries))
+            country_code = random.choice(countries)
+            self._x_forwarded_for_ip = GeoUtils.random_ipv4(country_code)
             if self._x_forwarded_for_ip:
                 self.report_warning(
-                    'Video is geo restricted. Retrying extraction with fake %s IP as X-Forwarded-For.' % self._x_forwarded_for_ip)
+                    'Video is geo restricted. Retrying extraction with fake IP %s (%s) as X-Forwarded-For.'
+                    % (self._x_forwarded_for_ip, country_code.upper()))
                 return True
         return False
 
