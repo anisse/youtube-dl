@@ -1,3 +1,13 @@
+version <unreleased>
+
+Core
+* [__init__] Metadata are now added after conversion (#5594)
+
+
+Extractors
+* [openload] Fix extraction (#10408, #12357)
+
+
 version 2017.03.06
 
 Core
