@@ -28,6 +28,8 @@ class XFileShareIE(InfoExtractor):
         ('streamin.to', 'Streamin.To'),
         ('xvidstage.com', 'XVIDSTAGE'),
         ('vidabc.com', 'Vid ABC'),
+        ('vidbom.com', 'VidBom'),
+        ('vidlo.us', 'vidlo'),
     )
 
     IE_DESC = 'XFileShare based sites: %s' % ', '.join(list(zip(*_SITES))[1])
