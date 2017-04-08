@@ -11,7 +11,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from test.helper import (
     assertGreaterEqual,
     expect_warnings,
-    expect_value,
     get_params,
     gettestcases,
     expect_info_dict,
@@ -200,8 +199,9 @@ def generator(test_case, tname):
                 self.assertEqual(
                     test_case['playlist_duration_sum'], got_duration)
 
-            for tc in test_cases:
-                expect_value(self, res_dict['id'], tc['info_dict']['id'], 'id')
+            for tc_num, tc in enumerate(test_cases):
+                tc_res_dict = res_dict['entries'][tc_num] if is_playlist else res_dict
+                expect_info_dict(self, tc_res_dict, tc.get('info_dict', {}))
                 tc_filename = get_tc_filename(tc)
                 if not test_case.get('params', {}).get('skip_download', False):
                     self.assertTrue(os.path.exists(tc_filename), msg='Missing file ' + tc_filename)
