@@ -122,6 +122,8 @@ class ITVIE(InfoExtractor):
                 'play_path': play_path,
                 'tbr': tbr,
                 'ext': 'flv',
+                # rtmp formats are now stop downloading at ~72MiB
+                'preference': -10,
             })
 
         ios_playlist_url = params.get('data-video-playlist')
@@ -172,7 +174,9 @@ class ITVIE(InfoExtractor):
                         href = ios_base_url + href
                     ext = determine_ext(href)
                     if ext == 'm3u8':
-                        formats.extend(self._extract_m3u8_formats(href, video_id, 'mp4', m3u8_id='hls', fatal=False))
+                        formats.extend(self._extract_m3u8_formats(
+                            href, video_id, 'mp4', entry_protocol='m3u8_native',
+                            m3u8_id='hls', fatal=False))
                     else:
                         formats.append({
                             'url': href,
