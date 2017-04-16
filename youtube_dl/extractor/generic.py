@@ -85,6 +85,7 @@ from .ustream import UstreamIE
 from .openload import OpenloadIE
 from .videopress import VideoPressIE
 from .rutube import RutubeIE
+from .limelight import LimelightBaseIE
 
 
 class GenericIE(InfoExtractor):
@@ -1651,6 +1652,15 @@ class GenericIE(InfoExtractor):
             },
             'add_ie': [SenateISVPIE.ie_key()],
         },
+        {
+            # Limelight embeds (1 channel embed + 4 media embeds)
+            'url': 'http://www.sedona.com/FacilitatorTraining2017',
+            'info_dict': {
+                'id': 'FacilitatorTraining2017',
+                'title': 'Facilitator Training 2017',
+            },
+            'playlist_mincount': 5,
+        },
         # {
         #     # TODO: find another test
         #     # http://schema.org/VideoObject
@@ -2483,6 +2493,11 @@ class GenericIE(InfoExtractor):
             return self.url_result(piksel_url, PikselIE.ie_key())
 
         # Look for Limelight embeds
+        limelight_urls = LimelightBaseIE._extract_urls(webpage, url)
+        if limelight_urls:
+            return self.playlist_result(
+                limelight_urls, video_id, video_title, video_description)
+
         mobj = re.search(r'LimelightPlayer\.doLoad(Media|Channel|ChannelList)\(["\'](?P<id>[a-z0-9]{32})', webpage)
         if mobj:
             lm = {
