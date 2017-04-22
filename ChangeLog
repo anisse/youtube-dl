@@ -1,6 +1,13 @@
 version <unreleased>
 
+Core
+
+* [socks] Handle cases where credentials are required but missing
+
 Extractors
+* [iqiyi] Fix playlist detection (#12504)
+- [azubu] Remove extractor (#12813)
+* [porn91] Fix extraction (#12814)
 + [generic] Support Brightcove videos in <iframe> (#12482)
 + [brightcove] Support URLs with bcpid instead of playerID (#12482)
 
