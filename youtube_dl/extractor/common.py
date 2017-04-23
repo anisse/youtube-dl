@@ -1397,7 +1397,9 @@ class InfoExtractor(object):
 
         def build_stream_name():
             # Despite specification does not mention NAME attribute for
-            # EXT-X-STREAM-INF it still sometimes may be present
+            # EXT-X-STREAM-INF tag it still sometimes may be present (see [1]
+            # or vidio test in TestInfoExtractor.test_parse_m3u8_formats)
+            # 1. http://www.vidio.com/watch/165683-dj_ambred-booyah-live-2015
             stream_name = last_stream_inf.get('NAME')
             if stream_name:
                 return stream_name
@@ -1420,7 +1422,9 @@ class InfoExtractor(object):
             elif line.startswith('#') or not line.strip():
                 continue
             else:
-                tbr = int_or_none(last_stream_inf.get('AVERAGE-BANDWIDTH') or last_stream_inf.get('BANDWIDTH'), scale=1000)
+                tbr = float_or_none(
+                    last_stream_inf.get('AVERAGE-BANDWIDTH') or
+                    last_stream_inf.get('BANDWIDTH'), scale=1000)
                 format_id = []
                 if m3u8_id:
                     format_id.append(m3u8_id)
@@ -1850,7 +1854,7 @@ class InfoExtractor(object):
                             'ext': mimetype2ext(mime_type),
                             'width': int_or_none(representation_attrib.get('width')),
                             'height': int_or_none(representation_attrib.get('height')),
-                            'tbr': int_or_none(bandwidth, 1000),
+                            'tbr': float_or_none(bandwidth, 1000),
                             'asr': int_or_none(representation_attrib.get('audioSamplingRate')),
                             'fps': int_or_none(representation_attrib.get('frameRate')),
                             'language': lang if lang not in ('mul', 'und', 'zxx', 'mis') else None,
