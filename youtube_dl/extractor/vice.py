@@ -20,7 +20,7 @@ from ..utils import (
 
 
 class ViceBaseIE(AdobePassIE):
-    def _extract_preplay_video(self, url, webpage):
+    def _extract_preplay_video(self, url, locale, webpage):
         watch_hub_data = extract_attributes(self._search_regex(
             r'(?s)(<watch-hub\s*.+?</watch-hub>)', webpage, 'watch hub'))
         video_id = watch_hub_data['vms-id']
@@ -45,7 +45,7 @@ class ViceBaseIE(AdobePassIE):
 
         try:
             host = 'www.viceland' if is_locked else self._PREPLAY_HOST
-            preplay = self._download_json('https://%s.com/en_us/preplay/%s' % (host, video_id), video_id, query=query)
+            preplay = self._download_json('https://%s.com/%s/preplay/%s' % (host, locale, video_id), video_id, query=query)
         except ExtractorError as e:
             if isinstance(e.cause, compat_HTTPError) and e.cause.code == 400:
                 error = json.loads(e.cause.read().decode())
@@ -88,7 +88,7 @@ class ViceBaseIE(AdobePassIE):
 
 
 class ViceIE(ViceBaseIE):
-    _VALID_URL = r'https?://(?:.+?\.)?vice\.com/(?:[^/]+/)?videos?/(?P<id>[^/?#&]+)'
+    _VALID_URL = r'https?://(?:.+?\.)?vice\.com/(?P<locale>[^/]+)/(?:[^/]+/)?videos?/(?P<id>[^/?#&]+)'
 
     _TESTS = [{
         'url': 'http://www.vice.com/video/cowboy-capitalists-part-1',
@@ -101,31 +101,37 @@ class ViceIE(ViceBaseIE):
         },
         'add_ie': ['Ooyala'],
     }, {
-        'url': 'http://www.vice.com/video/how-to-hack-a-car',
-        'md5': 'a7ecf64ee4fa19b916c16f4b56184ae2',
-        'info_dict': {
-            'id': '3jstaBeXgAs',
-            'ext': 'mp4',
-            'title': 'How to Hack a Car: Phreaked Out (Episode 2)',
-            'description': 'md5:ee95453f7ff495db8efe14ae8bf56f30',
-            'uploader_id': 'MotherboardTV',
-            'uploader': 'Motherboard',
-            'upload_date': '20140529',
-        },
-        'add_ie': ['Youtube'],
-    }, {
         'url': 'https://video.vice.com/en_us/video/the-signal-from-tolva/5816510690b70e6c5fd39a56',
-        'md5': '',
         'info_dict': {
             'id': '5816510690b70e6c5fd39a56',
             'ext': 'mp4',
             'uploader': 'Waypoint',
             'title': 'The Signal From Tölva',
+            'description': 'md5:3927e3c79f9e8094606a2b3c5b5e55d5',
             'uploader_id': '57f7d621e05ca860fa9ccaf9',
-            'timestamp': 1477941983938,
+            'timestamp': 1477941983,
+            'upload_date': '20161031',
         },
         'params': {
             # m3u8 download
+            'skip_download': True,
+        },
+        'add_ie': ['UplynkPreplay'],
+    }, {
+        'url': 'https://video.vice.com/alps/video/ulfs-wien-beruchtigste-grafitti-crew-part-1/581b12b60a0e1f4c0fb6ea2f',
+        'info_dict': {
+            'id': '581b12b60a0e1f4c0fb6ea2f',
+            'ext': 'mp4',
+            'title': 'ULFs - Wien berüchtigste Grafitti Crew - Part 1',
+            'description': '<p>Zwischen Hinterzimmer-Tattoos und U-Bahnschächten erzählen uns die Ulfs, wie es ist, "süchtig nach Sachbeschädigung" zu sein.</p>',
+            'uploader': 'VICE',
+            'uploader_id': '57a204088cb727dec794c67b',
+            'timestamp': 1485368119,
+            'upload_date': '20170125',
+            'age_limit': 14,
+        },
+        'params': {
+            # AES-encrypted m3u8
             'skip_download': True,
         },
         'add_ie': ['UplynkPreplay'],
@@ -142,6 +148,9 @@ class ViceIE(ViceBaseIE):
     _PREPLAY_HOST = 'video.vice'
 
     def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        video_id = mobj.group('id')
+        locale = mobj.group('locale')
         video_id = self._match_id(url)
         webpage, urlh = self._download_webpage_handle(url, video_id)
         embed_code = self._search_regex(
@@ -153,7 +162,7 @@ class ViceIE(ViceBaseIE):
             r'data-youtube-id="([^"]+)"', webpage, 'youtube id', default=None)
         if youtube_id:
             return self.url_result(youtube_id, 'Youtube')
-        return self._extract_preplay_video(urlh.geturl(), webpage)
+        return self._extract_preplay_video(urlh.geturl(), locale, webpage)
 
 
 class ViceShowIE(InfoExtractor):
@@ -186,3 +195,67 @@ class ViceShowIE(InfoExtractor):
         description = self._html_search_meta('description', webpage, 'description')
 
         return self.playlist_result(entries, show_id, title, description)
+
+
+class ViceArticleIE(InfoExtractor):
+    _VALID_URL = r'https://www.vice.com/[^/]+/article/(?P<id>[^?#]+)'
+
+    _TESTS = [{
+        'url': 'https://www.vice.com/en_us/article/on-set-with-the-woman-making-mormon-porn-in-utah',
+        'info_dict': {
+            'id': '58dc0a3dee202d2a0ccfcbd8',
+            'ext': 'mp4',
+            'title': 'Mormon War on Porn ',
+            'description': 'md5:ad396a2481e7f8afb5ed486878421090',
+            'uploader': 'VICE',
+            'uploader_id': '57a204088cb727dec794c693',
+            'timestamp': 1489160690,
+            'upload_date': '20170310',
+        },
+        'params': {
+            # AES-encrypted m3u8
+            'skip_download': True,
+        },
+    }, {
+        'url': 'http://www.vice.com/video/how-to-hack-a-car',
+        'md5': 'a7ecf64ee4fa19b916c16f4b56184ae2',
+        'info_dict': {
+            'id': '3jstaBeXgAs',
+            'ext': 'mp4',
+            'title': 'How to Hack a Car: Phreaked Out (Episode 2)',
+            'description': 'md5:ee95453f7ff495db8efe14ae8bf56f30',
+            'uploader_id': 'MotherboardTV',
+            'uploader': 'Motherboard',
+            'upload_date': '20140529',
+        },
+        'add_ie': ['Youtube'],
+    }]
+
+    def _real_extract(self, url):
+        display_id = self._match_id(url)
+
+        webpage = self._download_webpage(url, display_id)
+
+        prefetch_data = self._parse_json(self._search_regex(
+            r'window\.__PREFETCH_DATA\s*=\s*({.*});',
+            webpage, 'prefetch data'), display_id)
+        body = prefetch_data['body']
+        youtube_url = self._html_search_regex(
+            r'<iframe[^>]+src="(.*youtube\.com/.*)"', body, 'YouTube URL', default=None)
+        if youtube_url:
+            return {
+                '_type': 'url_transparent',
+                'url': youtube_url,
+                'display_id': display_id,
+                'ie_key': 'Youtube',
+            }
+
+        video_url = self._html_search_regex(
+            r'data-video-url="([^"]+)"', prefetch_data['embed_code'], 'video URL')
+
+        return {
+            '_type': 'url_transparent',
+            'url': video_url,
+            'display_id': display_id,
+            'ie_key': ViceIE.ie_key(),
+        }
