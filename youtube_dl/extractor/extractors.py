@@ -545,6 +545,7 @@ from .mangomolo import (
 )
 from .matchtv import MatchTVIE
 from .mdr import MDRIE
+from .mediaset import MediasetIE
 from .medici import MediciIE
 from .meipai import MeipaiIE
 from .melonvod import MelonVODIE
@@ -736,8 +737,8 @@ from .openload import OpenloadIE
 from .ora import OraTVIE
 from .orf import (
     ORFTVthekIE,
-    ORFOE1IE,
     ORFFM4IE,
+    ORFOE1IE,
     ORFIPTVIE,
 )
 from .packtpub import (
