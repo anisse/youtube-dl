@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
 from .common import InfoExtractor
 from ..compat import compat_str
 from ..utils import (
@@ -13,12 +15,15 @@ from ..utils import (
 
 class MediasetIE(InfoExtractor):
     _VALID_URL = r'''(?x)
-                    https?://
-                        (?:www\.)?video\.mediaset\.it/
-                        (?:
-                            (?:video|on-demand)/(?:[^/]+/)+[^/]+_|
-                            player/playerIFrame(?:Twitter)?\.shtml\?.*?\bid=
-                        )(?P<id>[0-9]+)
+                    (?:
+                        mediaset:|
+                        https?://
+                            (?:www\.)?video\.mediaset\.it/
+                            (?:
+                                (?:video|on-demand)/(?:[^/]+/)+[^/]+_|
+                                player/playerIFrame(?:Twitter)?\.shtml\?.*?\bid=
+                            )
+                    )(?P<id>[0-9]+)
                     '''
     _TESTS = [{
         # full episode
@@ -32,7 +37,7 @@ class MediasetIE(InfoExtractor):
             'thumbnail': r're:^https?://.*\.jpg$',
             'duration': 1414,
             'creator': 'mediaset',
-            'release_date': '20161107',
+            'upload_date': '20161107',
             'series': 'Hello Goodbye',
             'categories': ['reality'],
         },
@@ -49,7 +54,18 @@ class MediasetIE(InfoExtractor):
         # iframe twitter (from http://www.wittytv.it/se-prima-mi-fidavo-zero/)
         'url': 'https://www.video.mediaset.it/player/playerIFrameTwitter.shtml?id=665104&playrelated=false&autoplay=false&related=true&hidesocial=true',
         'only_matching': True,
+    }, {
+        'url': 'mediaset:661824',
+        'only_matching': True,
     }]
+
+    @staticmethod
+    def _extract_urls(webpage):
+        return [
+            mobj.group('url')
+            for mobj in re.finditer(
+                r'<iframe\b[^>]+\bsrc=(["\'])(?P<url>https?://(?:www\.)?video\.mediaset\.it/player/playerIFrame(?:Twitter)?\.shtml\?.*?\bid=\d+.*?)\1',
+                webpage)]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -94,7 +110,7 @@ class MediasetIE(InfoExtractor):
             'thumbnail': mediainfo.get('thumbnail'),
             'duration': parse_duration(mediainfo.get('duration')),
             'creator': creator,
-            'release_date': unified_strdate(mediainfo.get('production-date')),
+            'upload_date': unified_strdate(mediainfo.get('production-date')),
             'webpage_url': mediainfo.get('url'),
             'series': mediainfo.get('brand-value'),
             'categories': categories,
