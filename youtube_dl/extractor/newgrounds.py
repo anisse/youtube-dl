@@ -1,7 +1,15 @@
 from __future__ import unicode_literals
 
+import re
+
 from .common import InfoExtractor
-from ..utils import int_or_none
+from ..utils import (
+    extract_attributes,
+    int_or_none,
+    parse_duration,
+    parse_filesize,
+    unified_timestamp,
+)
 
 
 class NewgroundsIE(InfoExtractor):
@@ -14,7 +22,10 @@ class NewgroundsIE(InfoExtractor):
             'ext': 'mp3',
             'title': 'B7 - BusMode',
             'uploader': 'Burn7',
-        }
+            'timestamp': 1378878540,
+            'upload_date': '20130911',
+            'duration': 143,
+        },
     }, {
         'url': 'https://www.newgrounds.com/portal/view/673111',
         'md5': '3394735822aab2478c31b1004fe5e5bc',
@@ -23,6 +34,8 @@ class NewgroundsIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Dancin',
             'uploader': 'Squirrelman82',
+            'timestamp': 1460256780,
+            'upload_date': '20160410',
         },
     }, {
         # source format unavailable, additional mp4 formats
@@ -32,6 +45,8 @@ class NewgroundsIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'ZTV News Episode 8',
             'uploader': 'BennettTheSage',
+            'timestamp': 1487965140,
+            'upload_date': '20170224',
         },
         'params': {
             'skip_download': True,
@@ -46,11 +61,11 @@ class NewgroundsIE(InfoExtractor):
         title = self._html_search_regex(
             r'<title>([^>]+)</title>', webpage, 'title')
 
-        video_url = self._parse_json(self._search_regex(
+        media_url = self._parse_json(self._search_regex(
             r'"url"\s*:\s*("[^"]+"),', webpage, ''), media_id)
 
         formats = [{
-            'url': video_url,
+            'url': media_url,
             'format_id': 'source',
             'quality': 1,
         }]
@@ -59,7 +74,7 @@ class NewgroundsIE(InfoExtractor):
             r'max_resolution["\']\s*:\s*(\d+)', webpage, 'max resolution',
             default=None))
         if max_resolution:
-            url_base = video_url.rpartition('.')[0]
+            url_base = media_url.rpartition('.')[0]
             for resolution in (360, 720, 1080):
                 if resolution > max_resolution:
                     break
@@ -72,13 +87,80 @@ class NewgroundsIE(InfoExtractor):
         self._check_formats(formats, media_id)
         self._sort_formats(formats)
 
-        uploader = self._html_search_regex(
+        uploader = self._search_regex(
             r'(?:Author|Writer)\s*<a[^>]+>([^<]+)', webpage, 'uploader',
             fatal=False)
+
+        timestamp = unified_timestamp(self._search_regex(
+            r'<dt>Uploaded</dt>\s*<dd>([^<]+)', webpage, 'timestamp',
+            default=None))
+        duration = parse_duration(self._search_regex(
+            r'<dd>Song\s*</dd><dd>.+?</dd><dd>([^<]+)', webpage, 'duration',
+            default=None))
+
+        filesize_approx = parse_filesize(self._html_search_regex(
+            r'<dd>Song\s*</dd><dd>(.+?)</dd>', webpage, 'filesize',
+            default=None))
+        if len(formats) == 1:
+            formats[0]['filesize_approx'] = filesize_approx
+
+        if '<dd>Song' in webpage:
+            formats[0]['vcodec'] = 'none'
 
         return {
             'id': media_id,
             'title': title,
             'uploader': uploader,
+            'timestamp': timestamp,
+            'duration': duration,
             'formats': formats,
         }
+
+
+class NewgroundsPlaylistIE(InfoExtractor):
+    _VALID_URL = r'https?://(?:www\.)?newgrounds\.com/(?:collection|[^/]+/search/[^/]+)/(?P<id>[^/?#&]+)'
+    _TESTS = [{
+        'url': 'https://www.newgrounds.com/collection/cats',
+        'info_dict': {
+            'id': 'cats',
+            'title': 'Cats',
+        },
+        'playlist_mincount': 46,
+    }, {
+        'url': 'http://www.newgrounds.com/portal/search/author/ZONE-SAMA',
+        'info_dict': {
+            'id': 'ZONE-SAMA',
+            'title': 'Portal Search: ZONE-SAMA',
+        },
+        'playlist_mincount': 47,
+    }, {
+        'url': 'http://www.newgrounds.com/audio/search/title/cats',
+        'only_matching': True,
+    }]
+
+    def _real_extract(self, url):
+        playlist_id = self._match_id(url)
+
+        webpage = self._download_webpage(url, playlist_id)
+
+        title = self._search_regex(
+            r'<title>([^>]+)</title>', webpage, 'title', default=None)
+
+        # cut left menu
+        webpage = self._search_regex(
+            r'(?s)<div[^>]+\bclass=["\']column wide(.+)',
+            webpage, 'wide column', default=webpage)
+
+        entries = []
+        for a, path, media_id in re.findall(
+                r'(<a[^>]+\bhref=["\']/?((?:portal/view|audio/listen)/(\d+))[^>]+>)',
+                webpage):
+            a_class = extract_attributes(a).get('class')
+            if a_class not in ('item-portalsubmission', 'item-audiosubmission'):
+                continue
+            entries.append(
+                self.url_result(
+                    'https://www.newgrounds.com/%s' % path,
+                    ie=NewgroundsIE.ie_key(), video_id=media_id))
+
+        return self.playlist_result(entries, playlist_id, title)
