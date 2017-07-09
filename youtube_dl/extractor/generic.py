@@ -1185,7 +1185,7 @@ class GenericIE(InfoExtractor):
             },
             'add_ie': ['Kaltura'],
         },
-        # Eagle.Platform embed (generic URL)
+        # EaglePlatform embed (generic URL)
         {
             'url': 'http://lenta.ru/news/2015/03/06/navalny/',
             # Not checking MD5 as sometimes the direct HTTP link results in 404 and HLS is used
@@ -1199,8 +1199,26 @@ class GenericIE(InfoExtractor):
                 'view_count': int,
                 'age_limit': 0,
             },
+            'params': {
+                'skip_download': True,
+            },
         },
-        # ClipYou (Eagle.Platform) embed (custom URL)
+        # referrer protected EaglePlatform embed
+        {
+            'url': 'https://tvrain.ru/lite/teleshow/kak_vse_nachinalos/namin-418921/',
+            'info_dict': {
+                'id': '582306',
+                'ext': 'mp4',
+                'title': 'Стас Намин: «Мы нарушили девственность Кремля»',
+                'thumbnail': r're:^https?://.*\.jpg$',
+                'duration': 3382,
+                'view_count': int,
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        # ClipYou (EaglePlatform) embed (custom URL)
         {
             'url': 'http://muz-tv.ru/play/7129/',
             # Not checking MD5 as sometimes the direct HTTP link results in 404 and HLS is used
@@ -1211,6 +1229,9 @@ class GenericIE(InfoExtractor):
                 'thumbnail': r're:^https?://.*\.jpg$',
                 'duration': 216,
                 'view_count': int,
+            },
+            'params': {
+                'skip_download': True,
             },
         },
         # Pladform embed
@@ -2443,12 +2464,12 @@ class GenericIE(InfoExtractor):
         if kaltura_url:
             return self.url_result(smuggle_url(kaltura_url, {'source_url': url}), KalturaIE.ie_key())
 
-        # Look for Eagle.Platform embeds
+        # Look for EaglePlatform embeds
         eagleplatform_url = EaglePlatformIE._extract_url(webpage)
         if eagleplatform_url:
-            return self.url_result(eagleplatform_url, EaglePlatformIE.ie_key())
+            return self.url_result(smuggle_url(eagleplatform_url, {'referrer': url}), EaglePlatformIE.ie_key())
 
-        # Look for ClipYou (uses Eagle.Platform) embeds
+        # Look for ClipYou (uses EaglePlatform) embeds
         mobj = re.search(
             r'<iframe[^>]+src="https?://(?P<host>media\.clipyou\.ru)/index/player\?.*\brecord_id=(?P<id>\d+).*"', webpage)
         if mobj is not None:
