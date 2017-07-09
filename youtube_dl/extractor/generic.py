@@ -57,6 +57,7 @@ from .dailymotion import (
     DailymotionIE,
     DailymotionCloudIE,
 )
+from .dailymail import DailyMailIE
 from .onionstudios import OnionStudiosIE
 from .viewlift import ViewLiftEmbedIE
 from .mtv import MTVServicesEmbeddedIE
@@ -91,6 +92,7 @@ from .anvato import AnvatoIE
 from .washingtonpost import WashingtonPostIE
 from .wistia import WistiaIE
 from .mediaset import MediasetIE
+from .joj import JojIE
 
 
 class GenericIE(InfoExtractor):
@@ -758,6 +760,20 @@ class GenericIE(InfoExtractor):
                 'timestamp': 1398441542,
             },
             'add_ie': ['Dailymotion'],
+        },
+        # DailyMail embed
+        {
+            'url': 'http://www.bumm.sk/krimi/2017/07/05/biztonsagi-kamera-buktatta-le-az-agg-ferfit-utlegelo-apolot',
+            'info_dict': {
+                'id': '1495629',
+                'ext': 'mp4',
+                'title': 'Care worker punches elderly dementia patient in head 11 times',
+                'description': 'md5:3a743dee84e57e48ec68bf67113199a5',
+            },
+            'add_ie': ['DailyMail'],
+            'params': {
+                'skip_download': True,
+            },
         },
         # YouTube embed
         {
@@ -1771,6 +1787,16 @@ class GenericIE(InfoExtractor):
             'add_ie': [MediasetIE.ie_key()],
         },
         {
+            # JOJ.sk embeds
+            'url': 'https://www.noviny.sk/slovensko/238543-slovenskom-sa-prehnala-vlna-silnych-burok',
+            'info_dict': {
+                'id': '238543-slovenskom-sa-prehnala-vlna-silnych-burok',
+                'title': 'Slovenskom sa prehnala vlna silných búrok',
+            },
+            'playlist_mincount': 5,
+            'add_ie': [JojIE.ie_key()],
+        },
+        {
             # AMP embed (see https://www.ampproject.org/docs/reference/components/amp-video)
             'url': 'https://tvrain.ru/amp/418921/',
             'md5': 'cc00413936695987e8de148b67d14f1d',
@@ -2178,6 +2204,12 @@ class GenericIE(InfoExtractor):
             if playlists:
                 return self.playlist_from_matches(
                     playlists, video_id, video_title, lambda p: '//dailymotion.com/playlist/%s' % p)
+
+        # Look for DailyMail embeds
+        dailymail_urls = DailyMailIE._extract_urls(webpage)
+        if dailymail_urls:
+            return self.playlist_from_matches(
+                dailymail_urls, video_id, video_title, ie=DailyMailIE.ie_key())
 
         # Look for embedded Wistia player
         wistia_url = WistiaIE._extract_url(webpage)
@@ -2721,6 +2753,12 @@ class GenericIE(InfoExtractor):
         if mediaset_urls:
             return self.playlist_from_matches(
                 mediaset_urls, video_id, video_title, ie=MediasetIE.ie_key())
+
+        # Look for JOJ.sk embeds
+        joj_urls = JojIE._extract_urls(webpage)
+        if joj_urls:
+            return self.playlist_from_matches(
+                joj_urls, video_id, video_title, ie=JojIE.ie_key())
 
         def merge_dicts(dict1, dict2):
             merged = {}
