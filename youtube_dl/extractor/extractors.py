@@ -186,7 +186,6 @@ from .chirbit import (
 )
 from .cinchcast import CinchcastIE
 from .cjsw import CJSWIE
-from .clipfish import ClipfishIE
 from .cliphunter import CliphunterIE
 from .cliprs import ClipRsIE
 from .clipsyndicate import ClipsyndicateIE
@@ -1245,6 +1244,7 @@ from .washingtonpost import (
     WashingtonPostArticleIE,
 )
 from .wat import WatIE
+from .watchbox import WatchBoxIE
 from .watchindianporn import WatchIndianPornIE
 from .wdr import (
     WDRIE,
