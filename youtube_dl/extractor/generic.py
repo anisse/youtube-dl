@@ -98,6 +98,7 @@ from .wistia import WistiaIE
 from .mediaset import MediasetIE
 from .joj import JojIE
 from .megaphone import MegaphoneIE
+from .vzaar import VzaarIE
 
 
 class GenericIE(InfoExtractor):
@@ -1840,6 +1841,16 @@ class GenericIE(InfoExtractor):
                 'title': 'Стас Намин: «Мы нарушили девственность Кремля»',
             },
         },
+        {
+            # vzaar embed
+            'url': 'http://help.vzaar.com/article/165-embedding-video',
+            'md5': '7e3919d9d2620b89e3e00bec7fe8c9d4',
+            'info_dict': {
+                'id': '8707641',
+                'ext': 'mp4',
+                'title': 'Building A Business Online: Principal Chairs Q & A',
+            },
+        },
         # {
         #     # TODO: find another test
         #     # http://schema.org/VideoObject
@@ -2810,6 +2821,12 @@ class GenericIE(InfoExtractor):
         if mpfn_urls:
             return self.playlist_from_matches(
                 mpfn_urls, video_id, video_title, ie=MegaphoneIE.ie_key())
+
+        # Look for vzaar embeds
+        vzaar_urls = VzaarIE._extract_urls(webpage)
+        if vzaar_urls:
+            return self.playlist_from_matches(
+                vzaar_urls, video_id, video_title, ie=VzaarIE.ie_key())
 
         def merge_dicts(dict1, dict2):
             merged = {}
