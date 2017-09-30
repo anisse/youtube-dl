@@ -12,11 +12,13 @@ from ..compat import (
 )
 from ..utils import (
     clean_html,
-    unescapeHTML,
+    determine_ext,
     ExtractorError,
+    extract_attributes,
     int_or_none,
     mimetype2ext,
-    determine_ext,
+    smuggle_url,
+    unescapeHTML,
 )
 
 from .brightcove import (
@@ -28,7 +30,7 @@ from .nbc import NBCSportsVPlayerIE
 
 class YahooIE(InfoExtractor):
     IE_DESC = 'Yahoo screen and movies'
-    _VALID_URL = r'(?P<host>https?://(?:[a-zA-Z]{2}\.)?[\da-zA-Z_-]+\.yahoo\.com)/(?:[^/]+/)*(?:(?P<display_id>.+)?-)?(?P<id>[0-9]+)(?:-[a-z]+)?(?:\.html)?'
+    _VALID_URL = r'(?P<host>https?://(?:(?P<country>[a-zA-Z]{2})\.)?[\da-zA-Z_-]+\.yahoo\.com)/(?:[^/]+/)*(?:(?P<display_id>.+)?-)?(?P<id>[0-9]+)(?:-[a-z]+)?(?:\.html)?'
     _TESTS = [
         {
             'url': 'http://screen.yahoo.com/julian-smith-travis-legg-watch-214727115.html',
@@ -243,6 +245,11 @@ class YahooIE(InfoExtractor):
             'params': {
                 'skip_download': True,
             },
+        },
+        {
+            # custom brightcove, geo-restricted to Australia, bypassable
+            'url': 'https://au.tv.yahoo.com/plus7/sunrise/-/watch/37263964/sunrise-episode-wed-27-sep/',
+            'only_matching': True,
         }
     ]
 
@@ -273,18 +280,31 @@ class YahooIE(InfoExtractor):
         if bc_url:
             return self.url_result(bc_url, BrightcoveLegacyIE.ie_key())
 
+        def brightcove_url_result(bc_url):
+            return self.url_result(
+                smuggle_url(bc_url, {'geo_countries': [mobj.group('country')]}),
+                BrightcoveNewIE.ie_key())
+
         # Look for Brightcove New Studio embeds
         bc_url = BrightcoveNewIE._extract_url(self, webpage)
         if bc_url:
-            return self.url_result(bc_url, BrightcoveNewIE.ie_key())
+            return brightcove_url_result(bc_url)
 
-        brightcove_id = self._search_regex(
-            r'<iframe[^>]+data-video-id=["\'](\d+)', webpage, 'brightcove id',
-            default=None)
-        if brightcove_id:
-            return self.url_result(
-                'http://players.brightcove.net/2376984109001/default_default/index.html?videoId=%s' % brightcove_id,
-                BrightcoveNewIE.ie_key())
+        brightcove_iframe = self._search_regex(
+            r'(<iframe[^>]+data-video-id=["\']\d+[^>]+>)', webpage,
+            'brightcove iframe', default=None)
+        if brightcove_iframe:
+            attr = extract_attributes(brightcove_iframe)
+            src = attr.get('src')
+            if src:
+                parsed_src = compat_urlparse.urlparse(src)
+                qs = compat_urlparse.parse_qs(parsed_src.query)
+                account_id = qs.get('accountId', ['2376984109001'])[0]
+                brightcove_id = attr.get('data-video-id') or qs.get('videoId', [None])[0]
+                if account_id and brightcove_id:
+                    return brightcove_url_result(
+                        'http://players.brightcove.net/%s/default_default/index.html?videoId=%s'
+                        % (account_id, brightcove_id))
 
         # Query result is often embedded in webpage as JSON. Sometimes explicit requests
         # to video API results in a failure with geo restriction reason therefore using
