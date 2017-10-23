@@ -8,6 +8,7 @@ import os
 import time
 
 NOSECOMMAND="nosetests"
+CORE_TESTS="age_restriction|download|subtitles|write_annotations|iqiyi_sdk_interpreter|youtube_lists"
 
 
 def process(test):
@@ -133,29 +134,31 @@ def regressive_tests(refresults, testresults):
 
     return regressive
 
-def list_nose_tests():
-    tests = sorted(launch_nose(["--collect-only"], verbose=False).keys())
+def list_nose_tests(opts):
+    tests = sorted(launch_nose(["--collect-only"] + opts, verbose=False).keys())
     return tests
 
-def sub_tests():
+def test_subset():
+
     # See if we need to slice the work and do only one part
     slice_arg = os.getenv("TESTS")
     if slice_arg == None:
         return None
 
-    test_slice = slice_arg.split('_')[1]
-    slice_bounds = test_slice.split('-of-')
-    current_slice = int(slice_bounds[0])
-    nr_slices = int(slice_bounds[1])
-    all_tests = list_nose_tests()
-    length = len(all_tests)
-    sub_test_list = all_tests[(current_slice-1)*length // nr_slices : \
-                              current_slice*length // nr_slices]
+    return slice_arg.split('_')[1]
 
-    print("Running slice %d of %d; it has %d out of %d tests"%(current_slice,
-            nr_slices, len(sub_test_list), length))
+def sub_tests(subset):
+    if subset == "core":
+        nose_opt = ["-I", "test_(" + CORE_TESTS + ")\.py"]
+    elif subset == "download":
+        nose_opt = ["-I", "test_(?!" + CORE_TESTS + ")\.py"]
+    else:
+        raise RuntimeError("Unknown test subset " + subset)
+    all_tests = list_nose_tests(nose_opt)
 
-    return sub_test_list
+    print("Running %s test subset ; it has %d tests"%(subset, len(all_tests)))
+
+    return all_tests
 
 def bisect(good, bad, test):
     def git_bisect(args):
@@ -185,14 +188,18 @@ def main():
 
     git_checkout(testcommit)
 
-    sub_test_list = sub_tests()
+    parallel_nose_opts=[]
+    subset = test_subset()
+    if subset == "download":
+        parallel_nose_opts=["--processes=4",  "--process-timeout=540"]
 
+    sub_test_list = sub_tests(subset)
     if sub_test_list != None:
         args = sub_test_list
     else:
         args = sys.argv[3:] # use remaining args to limit test selection (if there are any)
 
-    results = launch_nose(args)
+    results = launch_nose(parallel_nose_opts + args)
 
     failed_tests = filter_bad(results)
     if len(failed_tests) == 0:
@@ -204,7 +211,7 @@ def main():
 
     git_checkout(refcommit)
 
-    results_ref = launch_nose(failed_tests)
+    results_ref = launch_nose(parallel_nose_opts + failed_tests)
     print("Second run of %d tests done."%len(failed_tests))
 
     regressive = regressive_tests(results_ref, results)

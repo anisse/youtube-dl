@@ -11,18 +11,12 @@ sudo: false
 env:
   - YTDL_TEST_SET=core
   - YTDL_TEST_SET=download
-  - TESTS=regression_1-of-7
-  - TESTS=regression_2-of-7
-  - TESTS=regression_3-of-7
-  - TESTS=regression_4-of-7
-  - TESTS=regression_5-of-7
-  - TESTS=regression_6-of-7
-  - TESTS=regression_7-of-7
+  - TESTS=regression_core
+  - TESTS=regression_download
 matrix:
   fast_finish: true
   allow_failures:
     - env: YTDL_TEST_SET=download
-    - env: YTDL_TEST_SET=core
 
 script: devscripts/travis.sh
 notifications:
