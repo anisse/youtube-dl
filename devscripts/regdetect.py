@@ -21,9 +21,11 @@ def process(test):
         print("Bad line passed, not enough elements:", test)
     # We try to convert this nose output:
     #   test_opengraph (test.test_InfoExtractor.TestInfoExtractor) ... ok
+    # or this:
+    #   test_opengraph (test.test_InfoExtractor.TestInfoExtractor): ... ok
     # into this test handle:
     #   test.test_InfoExtractor:TestInfoExtractor.test_opengraph
-    testpath = s[1][1:-1].split('.')
+    testpath = s[1].strip('():').split('.')
     if len(testpath) != 3:
         print("Bad testpath passed, not enough elements:", testpath)
         return (None, None)
