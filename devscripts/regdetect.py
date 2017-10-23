@@ -47,11 +47,11 @@ def fill_results(res, results):
     if res[0] != None and res[1] != None:
         results[res[0]] = res[1]
 
-def process_stream(f, verbose):
+def process_stream(f, verbose_level):
     results = {}
     buf = None
     for line in f:
-        if verbose: print(line, end='')
+        if verbose_level >= 1: print(line, end='')
         if line.startswith("===========") or line.startswith("--------------"):
             #this is the end
             break
@@ -62,16 +62,16 @@ def process_stream(f, verbose):
         else:
             if buf and len(buf) > 0: # some tests have multi-line outputs
                 buf += line
-    if verbose: # print the end of the file
+    if verbose_level >= 2: # print the end of the file
         for line in f: # it might contain interesting info, like tracebacks
             print(line, end='')
     fill_results(process(buf), results) # process last line
     return results
 
 
-def launch_nose(args=[], verbose=True):
+def launch_nose(args=[], verbose_level=2):
     nose = subprocess.Popen([NOSECOMMAND, "-v"] + args, stderr=subprocess.PIPE, universal_newlines=True)
-    results = process_stream(nose.stderr, verbose)
+    results = process_stream(nose.stderr, verbose_level)
     nose.stderr.close()
     nose.wait()
     return results
@@ -135,7 +135,7 @@ def regressive_tests(refresults, testresults):
     return regressive
 
 def list_nose_tests(opts):
-    tests = sorted(launch_nose(["--collect-only"] + opts, verbose=False).keys())
+    tests = sorted(launch_nose(["--collect-only"] + opts, verbose_level=0).keys())
     return tests
 
 def test_subset():
@@ -199,7 +199,7 @@ def main():
     else:
         args = sys.argv[3:] # use remaining args to limit test selection (if there are any)
 
-    results = launch_nose(parallel_nose_opts + args)
+    results = launch_nose(parallel_nose_opts + args, verbose_level=1)
 
     failed_tests = filter_bad(results)
     if len(failed_tests) == 0:
@@ -211,7 +211,7 @@ def main():
 
     git_checkout(refcommit)
 
-    results_ref = launch_nose(parallel_nose_opts + failed_tests)
+    results_ref = launch_nose(parallel_nose_opts + failed_tests, verbose_level=1)
     print("Second run of %d tests done."%len(failed_tests))
 
     regressive = regressive_tests(results_ref, results)
