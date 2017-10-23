@@ -135,7 +135,7 @@ def regressive_tests(refresults, testresults):
     return regressive
 
 def list_nose_tests(opts):
-    tests = sorted(launch_nose(["--collect-only"] + opts, verbose_level=0).keys())
+    tests = list(launch_nose(["--collect-only"] + opts, verbose_level=0).keys())
     return tests
 
 def test_subset():
