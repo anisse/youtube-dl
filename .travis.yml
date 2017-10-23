@@ -19,6 +19,7 @@ env:
   - TESTS=regression_6-of-7
   - TESTS=regression_7-of-7
 matrix:
+  fast_finish: true
   allow_failures:
     - env: YTDL_TEST_SET=download
     - env: YTDL_TEST_SET=core
@@ -28,7 +29,3 @@ notifications:
   email:
   # TODO: change before merge to put back project members !
     - anisse@astier.eu
-#  irc:
-#    channels:
-#      - "irc.freenode.org#youtube-dl"
-#    skip_join: true
