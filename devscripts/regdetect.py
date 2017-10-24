@@ -128,7 +128,7 @@ def regressive_tests(refresults, testresults):
     regressive = []
     # Return list of tests that are ok in refresults but not in testresults
     for k in refresults:
-        assert k in testresults, "New unknown test case"
+        assert k in testresults, "New unknown test case %s, not in:\n%s\nbut in:\n%s"%(k, testresults, refresults)
         if refresults[k] == "ok" and refresults[k] != testresults[k]: #let's assume FAIL == ERROR
             regressive.append(k)
 
