@@ -150,6 +150,7 @@ from .canalc2 import Canalc2IE
 from .canvas import (
     CanvasIE,
     CanvasEenIE,
+    VrtNUIE,
 )
 from .carambatv import (
     CarambaTVIE,
@@ -623,7 +624,6 @@ from .mwave import MwaveIE, MwaveMeetGreetIE
 from .myspace import MySpaceIE, MySpaceAlbumIE
 from .myspass import MySpassIE
 from .myvi import MyviIE
-from .myvideo import MyVideoIE
 from .myvidster import MyVidsterIE
 from .nationalgeographic import (
     NationalGeographicVideoIE,
