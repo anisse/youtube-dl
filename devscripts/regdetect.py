@@ -11,7 +11,7 @@ NOSECOMMAND="nosetests"
 CORE_TESTS="age_restriction|download|subtitles|write_annotations|iqiyi_sdk_interpreter|youtube_lists"
 
 
-def process(test):
+def process(test, warn):
     # Parse nose output to get test statuses
     # Format: test_<test_name> (<test_path>) ... [multi-line-error-message?] {ok,ERROR,FAIL}
     if not test or len(test) == 0:
@@ -38,8 +38,9 @@ def process(test):
         return (None, None)
 
     # we cannot assume that a test failing with a warning is ok (network error)
-    if status == "ok" and test.find("WARNING") != -1:
+    if status == "ok" and s[0] in warn:
         status = "WARNING"
+        del warn[s[0]]
 
     return (fulltestname, status)
 
@@ -49,23 +50,23 @@ def fill_results(res, results):
 
 def process_stream(f, verbose_level):
     results = {}
-    buf = None
+    warn = {}
     for line in f:
         if verbose_level >= 1: print(line, end='')
         if line.startswith("===========") or line.startswith("--------------"):
             #this is the end
             break
-        if line.startswith("test_"): #new test, process previous test
-            if buf != None:
-                fill_results(process(buf), results) # for every other element this signals the beginning of a new one
-            buf = line
-        else:
-            if buf and len(buf) > 0: # some tests have multi-line outputs
-                buf += line
+        if line.startswith("test_"): #new test, process it now
+            fill_results(process(line, warn), results) # for every other element this signals the beginning of a new one
+        elif line.startswith("WARNING:"): # format: WARNING: test_opengraph failed due to network errors, skipping...
+            testname = line.split()[1]
+            if testname.startswith("test_"):
+                warn[testname] = True # we don't know when the test will be processed because of multiprocess. Store this for future use
     if verbose_level >= 2: # print the end of the file
         for line in f: # it might contain interesting info, like tracebacks
             print(line, end='')
-    fill_results(process(buf), results) # process last line
+    if len(warn) != 0:
+        print("Some warnings weren't processed ! Warn:\n%s"%(warn))
     return results
 
 
