@@ -14,7 +14,7 @@ from ..utils import (
 
 
 class GameSpotIE(OnceIE):
-    _VALID_URL = r'https?://(?:www\.)?gamespot\.com/videos/(?:[^/]+/\d+-|embed/)(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?gamespot\.com/(?:video|article)s/(?:[^/]+/\d+-|embed/)(?P<id>\d+)'
     _TESTS = [{
         'url': 'http://www.gamespot.com/videos/arma-3-community-guide-sitrep-i/2300-6410818/',
         'md5': 'b2a30deaa8654fcccd43713a6b6a4825',
@@ -108,7 +108,8 @@ class GameSpotIE(OnceIE):
             onceux_url = self._parse_json(unescapeHTML(onceux_json), page_id).get('metadataUri')
             if onceux_url:
                 formats.extend(self._extract_once_formats(re.sub(
-                    r'https?://[^/]+', 'http://once.unicornmedia.com', onceux_url)))
+                    r'https?://[^/]+', 'http://once.unicornmedia.com', onceux_url),
+                    skip_http_formats=True))
 
         if not formats:
             for quality in ['sd', 'hd']:
