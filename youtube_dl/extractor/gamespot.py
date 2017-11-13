@@ -38,6 +38,9 @@ class GameSpotIE(OnceIE):
     }, {
         'url': 'https://www.gamespot.com/videos/embed/6439218/',
         'only_matching': True,
+    }, {
+        'url': 'https://www.gamespot.com/articles/the-last-of-us-2-receives-new-ps4-trailer/1100-6454469/',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
@@ -109,7 +112,7 @@ class GameSpotIE(OnceIE):
             if onceux_url:
                 formats.extend(self._extract_once_formats(re.sub(
                     r'https?://[^/]+', 'http://once.unicornmedia.com', onceux_url),
-                    skip_http_formats=True))
+                    http_formats_preference=-1))
 
         if not formats:
             for quality in ['sd', 'hd']:
