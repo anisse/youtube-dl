@@ -856,6 +856,7 @@ from .radiofrance import RadioFranceIE
 from .rai import (
     RaiPlayIE,
     RaiPlayLiveIE,
+    RaiPlayPlaylistIE,
     RaiIE,
 )
 from .rbmaradio import RBMARadioIE
