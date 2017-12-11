@@ -689,6 +689,7 @@ from .nhl import (
 )
 from .nick import (
     NickIE,
+    NickBrIE,
     NickDeIE,
     NickNightIE,
     NickRuIE,
