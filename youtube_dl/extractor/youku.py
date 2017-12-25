@@ -241,6 +241,10 @@ class YoukuShowIE(InfoExtractor):
         # Ongoing playlist. The initial page is the last one
         'url': 'http://list.youku.com/show/id_za7c275ecd7b411e1a19e.html',
         'only_matching': True,
+    }, {
+        #  No data-id value.
+        'url': 'http://list.youku.com/show/id_zefbfbd61237fefbfbdef.html',
+        'only_matching': True,
     }]
 
     def _extract_entries(self, playlist_data_url, show_id, note, query):
@@ -276,9 +280,9 @@ class YoukuShowIE(InfoExtractor):
             r'<div[^>]+id="(reload_\d+)', first_page, 'first page reload id')
         # The first reload_id has the same items as first_page
         reload_ids = re.findall('<li[^>]+data-id="([^"]+)">', first_page)
+        entries.extend(initial_entries)
         for idx, reload_id in enumerate(reload_ids):
             if reload_id == first_page_reload_id:
-                entries.extend(initial_entries)
                 continue
             _, new_entries = self._extract_entries(
                 'http://list.youku.com/show/episode', show_id,
