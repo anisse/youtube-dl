@@ -582,7 +582,6 @@ from .mailru import (
     MailRuMusicIE,
     MailRuMusicSearchIE,
 )
-from .makerschannel import MakersChannelIE
 from .makertv import MakerTVIE
 from .mangomolo import (
     MangomoloVideoIE,
@@ -625,7 +624,6 @@ from .mnet import MnetIE
 from .moevideo import MoeVideoIE
 from .mofosex import MofosexIE
 from .mojvideo import MojvideoIE
-from .moniker import MonikerIE
 from .morningstar import MorningstarIE
 from .motherless import (
     MotherlessIE,
@@ -646,6 +644,7 @@ from .mtv import (
 from .muenchentv import MuenchenTVIE
 from .musicplayon import MusicPlayOnIE
 from .mwave import MwaveIE, MwaveMeetGreetIE
+from .mychannels import MyChannelsIE
 from .myspace import MySpaceIE, MySpaceAlbumIE
 from .myspass import MySpassIE
 from .myvi import (
