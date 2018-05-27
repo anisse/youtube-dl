@@ -44,6 +44,7 @@ from .anysex import AnySexIE
 from .aol import AolIE
 from .allocine import AllocineIE
 from .aliexpress import AliExpressLiveIE
+from .apa import APAIE
 from .aparat import AparatIE
 from .appleconnect import AppleConnectIE
 from .appletrailers import (
@@ -718,10 +719,7 @@ from .nick import (
     NickRuIE,
 )
 from .niconico import NiconicoIE, NiconicoPlaylistIE
-from .ninecninemedia import (
-    NineCNineMediaStackIE,
-    NineCNineMediaIE,
-)
+from .ninecninemedia import NineCNineMediaIE
 from .ninegag import NineGagIE
 from .ninenow import NineNowIE
 from .nintendo import NintendoIE
