@@ -107,6 +107,7 @@ from .behindkink import BehindKinkIE
 from .bellmedia import BellMediaIE
 from .beatport import BeatportIE
 from .bet import BetIE
+from .bfi import BFIPlayerIE
 from .bigflix import BigflixIE
 from .bild import BildIE
 from .bilibili import (
@@ -441,10 +442,7 @@ from .goshgay import GoshgayIE
 from .gputechconf import GPUTechConfIE
 from .groupon import GrouponIE
 from .hark import HarkIE
-from .hbo import (
-    HBOIE,
-    HBOEpisodeIE,
-)
+from .hbo import HBOIE
 from .hearthisat import HearThisAtIE
 from .heise import HeiseIE
 from .hellporno import HellPornoIE
